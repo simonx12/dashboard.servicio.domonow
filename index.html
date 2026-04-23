@@ -207,6 +207,40 @@
     <div class="pg-stats" id="pgStats"></div>
     <div class="pg-ring-wrap"><canvas id="pgRing" width="140" height="140"></canvas><div class="pg-ring-center" id="pgRingCenter">0%</div></div>
   </div>
+
+  <!-- ── Implementación + Usabilidad Global (cards separadas) ── -->
+  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:24px">
+
+    <!-- Implementación Global -->
+    <div class="chart-card" id="pgImplCard">
+      <div class="chart-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="section-title" style="margin-bottom:2px">Implementación Global</div>
+          <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted)" id="pgImplSub">Módulos activos / 13 por propiedad</div>
+        </div>
+        <div id="pgImplKpi" style="text-align:right"></div>
+      </div>
+      <div class="chart-body" style="height:clamp(220px,20vw,300px);padding:8px 4px">
+        <canvas id="chartPgImpl"></canvas>
+      </div>
+    </div>
+
+    <!-- Usabilidad Global -->
+    <div class="chart-card" id="pgUsabCard">
+      <div class="chart-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+        <div>
+          <div class="section-title" style="margin-bottom:2px">Usabilidad Global</div>
+          <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted)" id="pgUsabSub">Módulos con uso real por módulo</div>
+        </div>
+        <div id="pgUsabKpi" style="text-align:right"></div>
+      </div>
+      <div class="chart-body" style="height:clamp(220px,20vw,300px);padding:8px 4px">
+        <canvas id="chartPgUsab"></canvas>
+      </div>
+    </div>
+
+  </div>
+
   <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
     <div class="section-title" style="margin-bottom:0">Avance Individual por Propiedad</div>
     <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">

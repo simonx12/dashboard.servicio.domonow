@@ -544,8 +544,8 @@ function renderGlobalProgress(){
   const props=state.properties,g=getGlobalProgress();
   $('pgValue').textContent=g+'%';$('pgPct').textContent=g+'%';$('pgFill').style.width=g+'%';$('pgRingCenter').textContent=g+'%';
 
-  // ── Usabilidad global: módulos con uso real / módulos activos totales ──
-  let totalActiveMods=0, totalWithUsage=0;
+  // ── Usabilidad global ──
+  let totalActiveMods=0,totalWithUsage=0;
   props.forEach(p=>{
     const mv=p.module_values||{};
     const active=(p.modules||[]).filter(mid=>!NON_MODULES.includes(mid));
@@ -556,29 +556,65 @@ function renderGlobalProgress(){
   const usabColor=usabGlobal>=80?'#00b460':usabGlobal>=50?'#e67e00':'#820ad1';
   const implColor=g>=80?'#00b460':g>=50?'#e67e00':'#820ad1';
   const totalMods=props.reduce((s,p)=>s+(p.modules||[]).length,0);
-
   $('pgSub').textContent=props.length+' propiedades · '+totalMods+' módulos activos';
 
-  // Inyectar badges de Implementación + Usabilidad debajo del subtítulo
-  const pgLeft=$('pgValue').closest('.pg-left')||$('pgValue').parentElement;
-  let badgeRow=document.getElementById('pgGlobalBadges');
-  if(!badgeRow){
-    badgeRow=document.createElement('div');
-    badgeRow.id='pgGlobalBadges';
-    badgeRow.style.cssText='display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;';
-    $('pgSub').insertAdjacentElement('afterend',badgeRow);
+  // ── KPI headers de las cards ──
+  const implOnTarget=props.filter(p=>getPropProgress(p)>=80).length;
+  if($('pgImplKpi')) $('pgImplKpi').innerHTML=`<div style="font-size:clamp(22px,2.2vw,30px);font-weight:800;color:${implColor};line-height:1">${g}%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${implOnTarget}/${props.length} en meta</div>`;
+  if($('pgUsabKpi')) $('pgUsabKpi').innerHTML=`<div style="font-size:clamp(22px,2.2vw,30px);font-weight:800;color:${usabColor};line-height:1">${usabGlobal}%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${totalWithUsage}/${totalActiveMods} en uso</div>`;
+  if($('pgImplSub')) $('pgImplSub').textContent=`Promedio: ${g}% · ${implOnTarget}/${props.length} propiedades en meta (≥80%)`;
+  if($('pgUsabSub')) $('pgUsabSub').textContent=`${totalWithUsage} de ${totalActiveMods} módulos activos con uso real`;
+
+  const dk=theme==='dark';
+  const tc=dk?'#9287b8':'#7c6fa0';
+
+  // ── Gráfico 1: Barras horizontales — Implementación por propiedad ──
+  destroyChart('chartPgImpl');
+  if($('chartPgImpl')&&props.length){
+    const sorted=[...props].sort((a,b)=>getPropProgress(b)-getPropProgress(a));
+    const labels=sorted.map(p=>p.name.length>18?p.name.substring(0,18)+'…':p.name);
+    const vals=sorted.map(p=>getPropProgress(p));
+    const colors=vals.map(v=>v>=80?'#00b460':v>=50?'rgba(230,126,0,.85)':'rgba(130,10,209,.85)');
+    charts['chartPgImpl']=new Chart($('chartPgImpl').getContext('2d'),{
+      type:'bar',
+      data:{labels,datasets:[{label:'Implementación (%)',data:vals,backgroundColor:colors,borderRadius:6,borderSkipped:false,barThickness:16}]},
+      options:{
+        indexAxis:'y',responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw}%`}}},
+        scales:{
+          x:{max:100,ticks:{color:tc,font:{family:'Montserrat',size:10},callback:v=>v+'%'},grid:{color:dk?'rgba(255,255,255,.06)':'rgba(0,0,0,.05)'},border:{display:false}},
+          y:{ticks:{color:tc,font:{family:'Montserrat',size:10}},grid:{display:false},border:{display:false}}
+        }
+      }
+    });
   }
-  badgeRow.innerHTML=`
-    <div style="background:${implColor}18;border:1.5px solid ${implColor}50;border-radius:12px;padding:10px 16px;min-width:130px;">
-      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Implementación Global</div>
-      <div style="font-size:24px;font-weight:800;color:${implColor};line-height:1">${g}%</div>
-      <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Prom. módulos activos / 13</div>
-    </div>
-    <div style="background:${usabColor}18;border:1.5px solid ${usabColor}50;border-radius:12px;padding:10px 16px;min-width:130px;">
-      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Usabilidad Global</div>
-      <div style="font-size:24px;font-weight:800;color:${usabColor};line-height:1">${usabGlobal}%</div>
-      <div style="font-size:10px;color:var(--text-muted);margin-top:4px">${totalWithUsage} / ${totalActiveMods} módulos en uso</div>
-    </div>`;
+
+  // ── Gráfico 2: Barras verticales — Uso por módulo (# propiedades con uso) ──
+  destroyChart('chartPgUsab');
+  if($('chartPgUsab')&&props.length){
+    const useMods=USE_MODULES;
+    const labels=useMods.map(m=>m.icon+' '+m.label.substring(0,10));
+    const withUsage=useMods.map(m=>props.filter(p=>(p.modules||[]).includes(m.id)&&((p.module_values||{})[m.id]||0)>0).length);
+    const withMod=useMods.map(m=>props.filter(p=>(p.modules||[]).includes(m.id)).length);
+    charts['chartPgUsab']=new Chart($('chartPgUsab').getContext('2d'),{
+      type:'bar',
+      data:{
+        labels,
+        datasets:[
+          {label:'Con uso real',data:withUsage,backgroundColor:'rgba(0,180,100,.75)',borderRadius:6,borderSkipped:false,barThickness:14},
+          {label:'Sin uso aún',data:withMod.map((v,i)=>Math.max(0,v-withUsage[i])),backgroundColor:'rgba(130,10,209,.2)',borderRadius:6,borderSkipped:false,barThickness:14}
+        ]
+      },
+      options:{
+        responsive:true,maintainAspectRatio:false,
+        plugins:{legend:{position:'bottom',labels:{color:tc,font:{family:'Montserrat',size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw} props`}}},
+        scales:{
+          x:{stacked:true,ticks:{color:tc,font:{family:'Montserrat',size:9}},grid:{display:false},border:{display:false}},
+          y:{stacked:true,ticks:{color:tc,font:{family:'Montserrat',size:10},stepSize:1},grid:{color:dk?'rgba(255,255,255,.06)':'rgba(0,0,0,.05)'},border:{display:false}}
+        }
+      }
+    });
+  }
 
   $('pgStats').innerHTML=Object.entries(PHASES).map(([k,cfg])=>{
     const arr=props.filter(p=>p.phase===k);
