@@ -271,7 +271,7 @@ async function fetchAllData(){
 }
 
 async function insertSupabase(prop){if(!sb)return;const{error}=await sb.from('properties').insert({name:prop.name,city:prop.city,phase:prop.phase,days_elapsed:prop.days,units:prop.units,active_modules:prop.modules,module_values:prop.module_values,notes:prop.notes,entry_date:new Date(prop.entry_date).toISOString()});if(error)showToast('Error: '+error.message,'error');}
-async function updateSupabase(id,prop){if(!sb)return;const{error}=await sb.from('properties').update({name:prop.name,city:prop.city,phase:prop.phase,days_elapsed:prop.days,units:prop.units,active_modules:prop.modules,module_values:prop.module_values,notes:prop.notes,entry_date:new Date(prop.entry_date).toISOString()}).eq('id',id);if(error)showToast('Error: '+error.message,'error');}
+async function updateSupabase(id,prop){if(!sb)return;const edDate=prop.entry_date?new Date(prop.entry_date).toISOString():null;const{error}=await sb.from('properties').update({name:prop.name,city:prop.city,phase:prop.phase,days_elapsed:prop.days,units:prop.units,active_modules:prop.modules,module_values:prop.module_values,notes:prop.notes,...(edDate?{entry_date:edDate}:{})}).eq('id',id);if(error)showToast('Error: '+error.message,'error');}
 async function deleteSupabase(id){if(!sb)return;const{error}=await sb.from('properties').delete().eq('id',id);if(error)showToast('Error: '+error.message,'error');}
 
 function startRealtime(){if(!sb)return;sbChannel=sb.channel('dn-rt').on('postgres_changes',{event:'*',schema:'public',table:'properties'},()=>fetchAllData()).subscribe();}
@@ -483,8 +483,14 @@ async function saveProperty(){
   if(!name){showToast('El nombre es requerido','error');return;}
   const modules=[],module_values={};
   MODULES.forEach(m=>{const chk=$('mp-chk-'+m.id),num=$('mp-num-'+m.id);if(chk&&chk.checked){modules.push(m.id);module_values[m.id]=Math.max(0,parseInt(num.value)||0);}});
-  const prop={name,city:$('fCity').value.trim(),phase:$('fPhase').value,days:parseInt($('fDays').value)||0,units:parseInt($('fUnits').value)||0,entry_date:$('fEntryDate').value,notes:$('fNotes').value.trim(),modules,module_values};
   const editId=$('editPropId').value;
+  // Si es edición y el campo de fecha está vacío, conservar la fecha original
+  let entryDate=$('fEntryDate').value;
+  if(editId&&!entryDate){
+    const existing=state.properties.find(x=>String(x.id)===String(editId));
+    entryDate=(existing&&existing.entry_date)||'';
+  }
+  const prop={name,city:$('fCity').value.trim(),phase:$('fPhase').value,days:parseInt($('fDays').value)||0,units:parseInt($('fUnits').value)||0,entry_date:entryDate,notes:$('fNotes').value.trim(),modules,module_values};
   closeModal();
   if(editId){
     if(sb){await updateSupabase(editId,prop);await fetchAllData();}
