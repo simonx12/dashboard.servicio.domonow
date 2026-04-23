@@ -1,0 +1,55 @@
+/* ══ DASHBOARD.CSS — KPI cards, Phase cards, Charts, Week Compare, Module Meters ══ */
+
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.kpi-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);padding:20px;box-shadow:var(--shadow);position:relative;overflow:hidden;transition:all .25s}
+.kpi-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.kpi-card::before{content:'';position:absolute;top:0;left:0;right:0;height:3px;background:var(--kc)}
+.kpi-label{font-size:clamp(8px,.8vw,10px);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.9px;margin-bottom:8px}
+.kpi-value{font-size:clamp(18px,2.2vw,30px);font-weight:800;line-height:1;margin-bottom:5px}
+.kpi-sub{font-size:clamp(9px,.85vw,11px);color:var(--text-muted)}
+.kpi-icon{position:absolute;right:16px;top:16px;width:38px;height:38px;border-radius:9px;background:var(--kbg);display:flex;align-items:center;justify-content:center;font-size:clamp(12px,1.3vw,18px)}
+
+.week-compare{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);padding:20px 24px;margin-bottom:24px}
+.wc-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px}
+.wc-title{font-size:clamp(10px,.95vw,13px);font-weight:700;display:flex;align-items:center;gap:8px}
+.wc-title::before{content:'';width:4px;height:16px;border-radius:2px;background:var(--domo);display:block}
+.wc-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+.wc-item{background:var(--surface2);border-radius:12px;padding:14px 16px;border:1px solid var(--border)}
+.wc-mod{font-size:clamp(9px,.85vw,11px);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px}
+.wc-cur{font-size:clamp(14px,1.8vw,24px);font-weight:800;color:var(--domo)}
+.wc-prev{font-size:clamp(10px,.95vw,13px);color:var(--text-muted)}
+.wc-delta{font-size:clamp(9px,.85vw,11px);font-weight:700;padding:2px 8px;border-radius:20px;display:inline-block;margin-top:4px}
+.wc-delta.up{background:rgba(0,180,100,.12);color:#00b460}
+.wc-delta.down{background:rgba(224,48,48,.1);color:#e03030}
+.wc-delta.eq{background:var(--surface3);color:var(--text-muted)}
+
+.phases-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+.phase-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);overflow:hidden;box-shadow:var(--shadow);transition:all .25s}
+.phase-card:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
+.phase-header{padding:13px 16px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.phase-dot{width:9px;height:9px;border-radius:50%}
+.phase-name{font-size:clamp(10px,.9vw,12px);font-weight:700;margin-left:7px}
+.phase-count{font-size:clamp(9px,.85vw,11px);font-weight:700;padding:3px 10px;border-radius:20px}
+.phase-body{padding:14px 16px}
+.phase-pct{font-size:clamp(13px,1.6vw,22px);font-weight:800}
+.progress-track{width:100%;height:5px;border-radius:3px;background:var(--surface2);margin:7px 0;overflow:hidden}
+.progress-fill{height:100%;border-radius:3px;transition:width 1.2s cubic-bezier(.4,0,.2,1)}
+.phase-days{font-size:clamp(9px,.85vw,11px);color:var(--text-muted)}
+
+.charts-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:16px;margin-bottom:24px}
+.chart-card{background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);box-shadow:var(--shadow);overflow:hidden}
+.chart-header{padding:16px 20px 10px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between}
+.chart-header .section-title{margin-bottom:0}
+.chart-body{padding:14px 18px 18px;height:250px;position:relative}
+.chart-full{grid-column:1/-1}
+.chart-tall{height:340px}
+
+.module-meters{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:24px}
+.mod-meter{background:var(--surface);border-radius:14px;border:1px solid var(--border);padding:16px 18px;box-shadow:var(--shadow)}
+.mm-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.mm-name{display:flex;align-items:center;gap:8px;font-size:clamp(10px,.95vw,13px);font-weight:700}
+.mm-icon{font-size:clamp(12px,1.3vw,18px)}
+.mm-pct{font-size:clamp(12px,1.3vw,18px);font-weight:800}
+.mm-bar{flex:1;height:7px;border-radius:4px;background:var(--surface2);overflow:hidden}
+.mm-fill{height:100%;border-radius:4px;transition:width 1s ease}
+.mm-meta{display:flex;justify-content:space-between;font-size:clamp(8px,.8vw,10px);color:var(--text-muted);margin-top:6px}

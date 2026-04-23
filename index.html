@@ -1,0 +1,1140 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="DomoNow – Dashboard de implementación para seguimiento de propiedades, módulos y avance del abismo de adopción.">
+  <meta name="theme-color" content="#820ad1">
+  <title>DomoNow – Dashboard de Implementación</title>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+  <!-- Styles -->
+  <link rel="stylesheet" href="css/base.css">
+  <link rel="stylesheet" href="css/layout.css">
+  <link rel="stylesheet" href="css/components.css">
+  <link rel="stylesheet" href="css/dashboard.css">
+  <link rel="stylesheet" href="css/progress.css">
+  <link rel="stylesheet" href="css/strategy.css">
+  <link rel="stylesheet" href="css/tasks.css">
+  <link rel="stylesheet" href="css/lineal.css">
+  <link rel="stylesheet" href="css/login.css">
+</head>
+<body data-theme="light">
+
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <div class="logo-wrap">
+      <div class="logo-icon">🏘️</div>
+      <span class="logo-text">Domo<span>Now</span></span>
+    </div>
+  </div>
+  <div class="sidebar-greeting" id="greetingLabel">Buenos días</div>
+  <div class="greeting-name" id="greetingText">Admin</div>
+  <div class="sidebar-date" id="sidebarDate"></div>
+  <div class="sidebar-sep"></div>
+  <nav class="sidebar-nav">
+    <div class="nav-item active" data-sec="dashboard" onclick="showSection('dashboard',this)"><span class="nav-icon">📊</span> Dashboard</div>
+    <div class="nav-item" data-sec="properties" onclick="showSection('properties',this)"><span class="nav-icon">🏢</span> Propiedades</div>
+    <div class="nav-item" data-sec="progress" onclick="showSection('progress',this)"><span class="nav-icon">🎯</span> Avances</div>
+    <div class="nav-item" data-sec="lineal" onclick="showSection('lineal',this)"><span class="nav-icon">📉</span> Avance Lineal</div>
+    <div class="nav-item" data-sec="settings" onclick="showSection('settings',this)"><span class="nav-icon">⚙️</span> Configuración</div>
+    <div class="sidebar-sep"></div>
+    <div class="nav-item" data-sec="tasks" onclick="showSection('tasks',this)"><span class="nav-icon">✅</span> Tareas</div>
+    <div class="sidebar-sep" style="margin:4px 0 2px"></div>
+    <div class="nav-item nav-strategy" data-sec="strategy" onclick="showSection('strategy',this)"><span class="nav-icon">🧭</span> Estrategia — Abismo</div>
+    <div class="nav-item nav-sub" data-sec="abismo-propiedad" onclick="showSection('abismo-propiedad',this)"><span class="nav-icon">⬛</span> Por Propiedad</div>
+    <div class="nav-item nav-sub" data-sec="abismo-porpropiedad" onclick="showSection('abismo-porpropiedad',this)"><span class="nav-icon">🏢</span> Abismo x Prop.</div>
+  </nav>
+  <div class="sidebar-bottom">
+    <!-- User block (populated by JS after login) -->
+    <div class="sidebar-user" id="sidebarUser" style="display:none">
+      <div class="user-avatar" id="userAvatar">?</div>
+      <div class="user-info">
+        <div class="user-name" id="userName">Usuario</div>
+        <div class="user-email" id="userEmail">-</div>
+      </div>
+      <div class="user-logout" onclick="logoutUser()" title="Cerrar sesión">🚪</div>
+    </div>
+    <div class="sidebar-version">DomoNow v3.0 · 2025</div>
+  </div>
+</aside>
+
+<header class="topbar">
+  <div class="topbar-title" id="topbarTitle">Panel de <span style="color:var(--domo)">Implementación</span></div>
+  <div class="topbar-actions">
+    <div class="topbar-clock" id="topbarClock">--:--:--</div>
+    <div class="btn-icon" onclick="toggleTheme()" id="themeBtn">🌙</div>
+    <div class="btn-icon" onclick="refreshData()" id="refreshBtn">↻</div>
+  </div>
+</header>
+
+<main class="main"><div class="content">
+
+<!-- LOGIN -->
+<div id="sec-login">
+  <div class="login-bg"></div>
+  <div class="login-orb login-orb-1"></div>
+  <div class="login-orb login-orb-2"></div>
+  <div class="login-orb login-orb-3"></div>
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">🏘️</div>
+      <div class="login-logo-text">Domo<span>Now</span></div>
+    </div>
+    <div class="login-title">Bienvenido de nuevo</div>
+    <div class="login-subtitle">Ingresa tus credenciales para acceder al panel</div>
+    <div class="login-field">
+      <label class="login-label" for="loginEmail">Correo electrónico</label>
+      <input class="login-input" id="loginEmail" type="email" placeholder="usuario@empresa.com" autocomplete="email" onkeydown="if(event.key==='Enter')loginUser()"/>
+    </div>
+    <div class="login-field">
+      <label class="login-label" for="loginPassword">Contraseña</label>
+      <input class="login-input" id="loginPassword" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')loginUser()"/>
+    </div>
+    <button class="login-btn" id="loginBtn" onclick="loginUser()">
+      <span id="loginBtnText">Ingresar</span>
+      <span id="loginBtnArrow">→</span>
+      <span id="loginSpinner" class="login-spinner" style="display:none"></span>
+    </button>
+    <div class="login-error" id="loginError">
+      <span>⚠️</span>
+      <span id="loginErrorMsg">Error de autenticación</span>
+    </div>
+    <div class="login-footer">
+      <span class="login-version">v3.0 — Ofima S.A.S</span>
+      <span class="login-badge">INTERNAL TOOL</span>
+    </div>
+  </div>
+</div>
+
+<!-- DASHBOARD -->
+<div id="sec-dashboard" style="display:none" class="fade-in">
+  <div class="kpi-grid">
+    <div class="kpi-card" style="--kc:#820ad1;--kbg:rgba(130,10,209,.1)"><div class="kpi-icon">🏘️</div><div class="kpi-label">Total Propiedades</div><div class="kpi-value" id="kpiTotal">0</div><div class="kpi-sub">En plataforma</div></div>
+    <div class="kpi-card" style="--kc:#0ea5e9;--kbg:rgba(14,165,233,.1)"><div class="kpi-icon">0️⃣</div><div class="kpi-label">Fase 0</div><div class="kpi-value" id="kpiFase0">0</div><div class="kpi-sub">⏱ Prom. <span id="kpiFase0Days">0</span> días</div></div>
+    <div class="kpi-card" style="--kc:#820ad1;--kbg:rgba(130,10,209,.1)"><div class="kpi-icon">1️⃣</div><div class="kpi-label">Fase 1</div><div class="kpi-value" id="kpiImpl">0</div><div class="kpi-sub">⏱ Prom. <span id="kpiImplDays">0</span> días</div></div>
+    <div class="kpi-card" style="--kc:#e67e00;--kbg:rgba(247,181,0,.12)"><div class="kpi-icon">2️⃣</div><div class="kpi-label">Fase 2</div><div class="kpi-value" id="kpiPilot">0</div><div class="kpi-sub">⏱ Prom. <span id="kpiPilotDays">0</span> días</div></div>
+    <div class="kpi-card" style="--kc:#00b460;--kbg:rgba(0,180,100,.1)"><div class="kpi-icon">3️⃣</div><div class="kpi-label">Fase 3</div><div class="kpi-value" id="kpiSupport">0</div><div class="kpi-sub">⏱ Prom. <span id="kpiSupportDays">0</span> días</div></div>
+  </div>
+
+  <div class="section-title">Progreso por Fase</div>
+  <div class="phases-grid" id="phasesGrid"></div>
+    <!-- Gráficas Globales: Implementación + Usabilidad -->
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px">
+
+      <!-- Implementación Global -->
+      <div class="chart-card" id="implGlobalCard">
+        <div class="chart-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+          <div>
+            <div class="section-title" style="margin-bottom:2px">Implementación Global</div>
+            <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted)" id="implGlobalSub">Avance ponderado por propiedad</div>
+          </div>
+          <div id="implGlobalKpis" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+        </div>
+        <div class="chart-body" style="height:clamp(260px,24vw,340px);padding:8px 4px">
+          <canvas id="chartImplGlobal"></canvas>
+        </div>
+      </div>
+
+      <!-- Usabilidad Global -->
+      <div class="chart-card" id="usabGlobalCard">
+        <div class="chart-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
+          <div>
+            <div class="section-title" style="margin-bottom:2px">Usabilidad Global</div>
+            <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted)" id="usabGlobalSub">% de módulos con uso real (excl. config. y capacitación)</div>
+          </div>
+          <div id="usabGlobalKpis" style="display:flex;gap:10px;flex-wrap:wrap"></div>
+        </div>
+        <div class="chart-body" style="height:clamp(260px,24vw,340px);padding:8px 4px">
+          <canvas id="chartUsabGlobal"></canvas>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- PROPERTIES -->
+<div id="sec-properties" style="display:none" class="fade-in">
+  <div class="table-card">
+    <div class="table-topbar">
+      <div class="section-title" style="margin-bottom:0">Propiedades</div>
+      <div style="display:flex;gap:9px;align-items:center;flex-wrap:wrap">
+        <input class="table-search" id="propSearch" placeholder="🔍 Buscar..." oninput="filterProperties()"/>
+        <div class="filter-tabs">
+          <div class="filter-tab active" onclick="setFilter('all',this)">Todas</div>
+          <div class="filter-tab" onclick="setFilter('fase0',this)">Fase 0</div>
+          <div class="filter-tab" onclick="setFilter('fase1',this)">Fase 1</div>
+          <div class="filter-tab" onclick="setFilter('fase2',this)">Fase 2</div>
+          <div class="filter-tab" onclick="setFilter('fase3',this)">Fase 3</div>
+        </div>
+        <button class="btn-primary btn-sm" onclick="openAddModal()">+ Agregar</button>
+      </div>
+    </div>
+    <div style="overflow-x:auto">
+      <table>
+        <thead><tr><th>Propiedad</th><th>Ciudad</th><th>Fase</th><th>Unidades</th><th>Módulos</th><th>Días</th><th>Avance</th><th>Acciones</th></tr></thead>
+        <tbody id="propsBody"></tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+
+<!-- CHARTS -->
+<div id="sec-charts" style="display:none" class="fade-in">
+  <div class="charts-grid">
+    <div class="chart-card"><div class="chart-header"><div class="section-title">Distribución por Fase</div></div><div class="chart-body"><canvas id="chartPhase2"></canvas></div></div>
+    <div class="chart-card"><div class="chart-header"><div class="section-title">Radar de Cumplimiento de Módulos</div></div><div class="chart-body"><canvas id="chartRadar"></canvas></div></div>
+    <div class="chart-card chart-full"><div class="chart-header"><div class="section-title">Días en Fase por Propiedad</div></div><div class="chart-body chart-tall"><canvas id="chartDays"></canvas></div></div>
+    <div class="chart-card chart-full"><div class="chart-header"><div class="section-title">Avance Real Individual (%)</div></div><div class="chart-body chart-tall"><canvas id="chartProps2"></canvas></div></div>
+  </div>
+</div>
+
+<!-- PROGRESS -->
+<div id="sec-progress" style="display:none" class="fade-in">
+  <div class="progress-global-card">
+    <div class="pg-left">
+      <div class="pg-label">Avance Ponderado Global</div>
+      <div class="pg-value" id="pgValue">0%</div>
+      <div class="pg-sub" id="pgSub">0 propiedades · 0 módulos activos</div>
+      <div class="pg-bar-wrap"><div class="pg-bar"><div class="pg-fill" id="pgFill" style="width:0%"></div></div><span class="pg-pct" id="pgPct">0%</span></div>
+    </div>
+    <div class="pg-stats" id="pgStats"></div>
+    <div class="pg-ring-wrap"><canvas id="pgRing" width="140" height="140"></canvas><div class="pg-ring-center" id="pgRingCenter">0%</div></div>
+  </div>
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;flex-wrap:wrap;gap:10px">
+    <div class="section-title" style="margin-bottom:0">Avance Individual por Propiedad</div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <div class="filter-tabs" id="progressFilterTabs">
+        <div class="filter-tab active" onclick="setPFilter('all',this)">Todas</div>
+        <div class="filter-tab" onclick="setPFilter('fase0',this)">Fase 0</div>
+        <div class="filter-tab" onclick="setPFilter('fase1',this)">Fase 1</div>
+        <div class="filter-tab" onclick="setPFilter('fase2',this)">Fase 2</div>
+        <div class="filter-tab" onclick="setPFilter('fase3',this)">Fase 3</div>
+      </div>
+      <select class="lang-sel" id="progressSort" onchange="renderPropertyProgressCards()" style="font-size:clamp(10px,.9vw,12px)">
+        <option value="pct_desc">Mayor avance</option>
+        <option value="pct_asc">Menor avance</option>
+        <option value="name">Nombre</option>
+        <option value="phase">Fase</option>
+      </select>
+    </div>
+  </div>
+  <div class="prop-progress-grid" id="propProgressGrid"></div>
+  <div class="chart-card">
+    <div class="chart-header"><div class="section-title">% Cumplimiento por Módulo — Todas las Propiedades</div></div>
+    <div class="chart-body" style="height:320px"><canvas id="chartModProgress"></canvas></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="sec-settings" style="display:none" class="fade-in">
+  <div class="settings-grid">
+    <div class="settings-card">
+      <div class="settings-section">General</div>
+      <div class="setting-row"><div><div class="setting-label">Tema</div></div><div class="btn-icon" onclick="toggleTheme()" id="themeBtn2" style="width:auto;padding:0 12px">🌙 Oscuro</div></div>
+      <div class="setting-row"><div><div class="setting-label">Auto-refresh (seg)</div><div class="setting-sub">Refresca automáticamente</div></div><input class="setting-input" type="number" id="setAutoRefresh" min="10" max="3600" value="60" style="width:80px" onchange="saveSettings()"/></div>
+      <div class="setting-row"><div><div class="setting-label">Tu nombre</div><div class="setting-sub">Aparece en el saludo</div></div><input class="setting-input" type="text" id="setUserName" placeholder="Admin" oninput="saveSettings();updateGreeting()"/></div>
+    </div>
+    <div class="settings-card">
+      <div class="settings-section">Metas de Módulos</div>
+      <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted);margin-bottom:12px">Base de cálculo: 50% de las unidades de cada propiedad</div>
+      <div id="targetSettings"></div>
+    </div>
+    <div class="settings-card full">
+      <div class="settings-section">Fechas de referencia semanal</div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Inicio semana actual</label><input class="form-input" type="date" id="setCurWeekStart" onchange="saveSettings()"/></div>
+        <div class="form-group"><label class="form-label">Inicio semana anterior</label><input class="form-input" type="date" id="setPrevWeekStart" onchange="saveSettings()"/></div>
+      </div>
+      <button class="btn-primary btn-sm" onclick="autoSetDates()">Calcular automáticamente (último viernes)</button>
+    </div>
+    <div class="settings-card full">
+      <div class="settings-section">Comparativa Semanal</div>
+      <div class="wc-header" style="margin-bottom:12px">
+        <div class="wc-title">Esta semana vs semana pasada</div>
+        <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted)" id="wcDateRange"></div>
+      </div>
+      <div class="wc-grid" id="wcGrid"></div>
+    </div>
+    <div class="settings-card full">
+      <div class="settings-section">Datos Locales</div>
+      <div class="setting-row" style="background:rgba(0,180,100,.05);border:1px solid rgba(0,180,100,.2);border-radius:12px;padding:12px 16px;margin-bottom:8px">
+        <div><div class="setting-label">💾 Guardado en este navegador</div><div class="setting-sub" id="localDataInfo">—</div></div>
+        <button class="btn-outline" style="color:#e03030;border-color:#e03030;font-size:11px;padding:4px 10px" onclick="clearLocalData()">🗑️ Borrar todo</button>
+      </div>
+      <div class="settings-section">Conexión Supabase</div>
+      <div class="setting-row"><div><div class="setting-label">Project URL</div></div><div style="font-size:clamp(10px,.9vw,12px);color:var(--text-muted);font-family:JetBrains Mono,monospace" id="setShowUrl">No configurado</div></div>
+      <div class="setting-row"><div><div class="setting-label">Estado</div></div><div id="setConnStatus" style="font-size:clamp(10px,.9vw,12px);font-weight:600"></div></div>
+      <div style="margin-top:14px;display:flex;gap:10px">
+        <button class="btn-outline btn-sm" onclick="goConnect()">Reconfigurar</button>
+        <button class="btn-del btn-sm" onclick="disconnectSupabase()">Desconectar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════ STRATEGY / ABISMO ══════════════════════════════ -->
+<div id="sec-strategy" style="display:none" class="fade-in">
+
+  <!-- ══ HEADER: resumen general compacto ══ -->
+  <div class="strategy-header">
+    <div class="sh-top">
+      <div style="flex:1;min-width:0;position:relative;z-index:1">
+        <div class="sh-badge">🧭 Vista Estratégica · DomoNow</div>
+        <div class="sh-title">Dashboard de Abismo</div>
+        <div class="sh-sub">Distancia entre el estado actual y las metas por módulo. Identifica brechas críticas y oportunidades de cierre.</div>
+      </div>
+    </div>
+    <div class="sh-metrics" id="strategyGlobalMetrics"></div>
+  </div>
+
+  <!-- ══ TAB NAV: pills horizontales bajo el header ══ -->
+  <div class="strat-tab-nav">
+    <button class="strat-tab-btn strat-tab-active" id="btnViewOverview" onclick="setStrategyView('overview',this)">
+      <span>🌐</span> General
+    </button>
+    <button class="strat-tab-btn" id="btnViewCards" onclick="setStrategyView('cards',this)">
+      <span>⬛</span> Por Propiedad
+    </button>
+    <button class="strat-tab-btn" id="btnViewProp" onclick="setStrategyView('prop',this)">
+      <span>🏢</span> Abismo por Propiedad
+    </button>
+  </div>
+
+  <!-- ══ FILTROS (solo visibles en Cards/Heat/Chart) ══ -->
+  <div id="stratFiltersBar" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:clamp(9px,.85vw,11px);font-weight:700;color:var(--text-muted);white-space:nowrap">FILTRAR:</span>
+      <div class="filter-tabs" id="strategyPhaseTabs">
+        <div class="filter-tab active" onclick="setStratPhase('all',this)">Todas</div>
+        <div class="filter-tab" onclick="setStratPhase('fase0',this)">Fase 0</div>
+        <div class="filter-tab" onclick="setStratPhase('fase1',this)">Fase 1</div>
+        <div class="filter-tab" onclick="setStratPhase('fase2',this)">Fase 2</div>
+        <div class="filter-tab" onclick="setStratPhase('fase3',this)">Fase 3</div>
+      </div>
+    </div>
+    <div class="abismo-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#e03030"></div> Crítico &lt;50%</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e67e00"></div> Alerta 50–79%</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#00b460"></div> Meta ≥80%</div>
+      <div class="legend-item"><div class="legend-dot" style="background:var(--surface3)"></div> Sin activar</div>
+    </div>
+  </div>
+
+  <!-- ══ OVERVIEW: vista general ══ -->
+  <div id="stratViewOverview">
+    <!-- KPI mini-cards resumen -->
+    <div class="overview-kpi-row" id="overviewKpiRow"></div>
+    <!-- Radar de Módulos — prominente, ancho completo -->
+    <div class="prop-chasm-chart-card" style="margin-bottom:20px">
+      <div class="pcc-header">
+        <div class="pcc-title" style="font-size:clamp(13px,1.1vw,16px);font-weight:800">📡 Radar de Módulos — Promedio Global</div>
+        <div class="pcc-sub" id="overviewRadarSub"></div>
+      </div>
+      <div style="height:clamp(280px,28vw,420px);padding:clamp(12px,1.2vw,20px)">
+        <canvas id="chartOverviewRadar"></canvas>
+      </div>
+    </div>
+    <!-- Fila de gráficas secundarias -->
+    <div class="overview-charts-grid">
+      <div class="prop-chasm-chart-card">
+        <div class="pcc-header"><div class="pcc-title">Propiedades por Fase</div></div>
+        <div style="height:220px;padding:16px"><canvas id="chartOverviewPhase"></canvas></div>
+      </div>
+      <div class="prop-chasm-chart-card">
+        <div class="pcc-header"><div class="pcc-title">Avance por Propiedad</div></div>
+        <div style="height:220px;padding:16px"><canvas id="chartOverviewProps"></canvas></div>
+      </div>
+      <div class="prop-chasm-chart-card">
+        <div class="pcc-header"><div class="pcc-title">Distribución de Estado</div></div>
+        <div style="height:220px;padding:16px"><canvas id="chartOverviewDist"></canvas></div>
+      </div>
+    </div>
+    <!-- Tabla resumen rápida -->
+    <div class="prop-chasm-chart-card" style="margin-top:20px">
+      <div class="pcc-header">
+        <div class="pcc-title">Resumen Global de Propiedades</div>
+        <div class="pcc-sub" id="overviewTableSub"></div>
+      </div>
+      <div style="overflow-x:auto">
+        <table style="width:100%;border-collapse:collapse">
+          <thead><tr id="overviewTableHead"></tr></thead>
+          <tbody id="overviewTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- CARDS VIEW (módulos) -->
+  <div id="stratViewCards" style="display:none">
+    <div class="abismo-grid" id="abismoGrid"></div>
+  </div>
+
+  <!-- HEAT MAP VIEW -->
+  <div id="stratViewHeat" style="display:none">
+    <div class="abismo-overview">
+      <div class="section-title">Mapa de Calor — % Cumplimiento por Módulo y Propiedad</div>
+      <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted);margin-bottom:10px">Cada celda muestra el % de cumplimiento de la meta. Gris = módulo no activo.</div>
+      <div id="abismoHeatMap"></div>
+    </div>
+  </div>
+
+  <!-- CHART VIEW -->
+
+
+  <!-- CARDS VIEW (módulos) -->
+  <div id="stratViewCards" style="display:none">
+    <div class="abismo-grid" id="abismoGrid"></div>
+  </div>
+
+  <!-- HEAT MAP VIEW -->
+  <div id="stratViewHeat" style="display:none">
+    <div class="abismo-overview">
+      <div class="section-title">Mapa de Calor — % Cumplimiento por Módulo y Propiedad</div>
+      <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted);margin-bottom:10px">Cada celda muestra el % de cumplimiento de la meta. Gris = módulo no activo.</div>
+      <div id="abismoHeatMap"></div>
+    </div>
+  </div>
+
+  <!-- CHART VIEW -->
+  <div id="stratViewChart" style="display:none">
+    <div class="charts-grid">
+      <div class="chart-card chart-full">
+        <div class="chart-header"><div class="section-title">Abismo por Propiedad — Avance vs Meta (100%)</div></div>
+        <div class="chart-body chart-tall"><canvas id="chartAbismoProps"></canvas></div>
+      </div>
+      <div class="chart-card chart-full">
+        <div class="chart-header"><div class="section-title">Cumplimiento por Módulo — Gap hacia la meta</div></div>
+        <div class="chart-body" style="height:320px"><canvas id="chartAbismoModules"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><div class="section-title">Distribución de Avance Global</div></div>
+        <div class="chart-body"><canvas id="chartAbismoDist"></canvas></div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-header"><div class="section-title">Radar de Abismo — Módulos vs Meta</div></div>
+        <div class="chart-body"><canvas id="chartAbismoRadar"></canvas></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PROPERTY CHASM VIEW (nueva pestaña: abismo por propiedad con tareas) -->
+  <div id="stratViewProp" style="display:none">
+
+    <!-- Sub-tabs pill selector -->
+    <div class="prop-subtabs-bar">
+      <button id="propSubTabEst" class="prop-subtab prop-subtab-active" onclick="setPropSubTab('estrategia')">
+        <span class="pst-icon">🧭</span> Estrategia
+      </button>
+      <button id="propSubTabRoad" class="prop-subtab" onclick="setPropSubTab('roadmap')">
+        <span class="pst-icon">🗺️</span> Roadmap
+      </button>
+    </div>
+
+    <!-- ══ SUB-TAB: ESTRATEGIA ══ -->
+    <div id="propSubStrategia">
+
+      <!-- Selector de propiedad -->
+      <div class="prop-selector-bar">
+        <span class="prop-selector-label">🏢 Propiedad</span>
+        <div class="prop-dropdown-wrap">
+          <button class="prop-nav-btn" onclick="navPropStep('propDropdown',-1)" title="Anterior">‹</button>
+          <select class="prop-dropdown" id="propDropdown" onchange="selectPropChasm(this.value)"></select>
+          <button class="prop-nav-btn" onclick="navPropStep('propDropdown',1)" title="Siguiente">›</button>
+          <div class="prop-dd-badge" id="propDdBadge"><span class="prop-dd-dot" style="background:#94a3b8"></span><span class="prop-dd-pct">—</span></div>
+        </div>
+      </div>
+
+      <!-- CURVA DE ADOPCIÓN (estilo index5 con brand kit) -->
+      <div class="adoption-main-card" id="adoptionMainCard">
+        <!-- Header de la card -->
+        <div class="amc-header">
+          <div>
+            <div class="amc-eyebrow">🧭 Vista Estratégica · DomoNow</div>
+            <div class="amc-title" id="propChasmTitle">Curva de Adopción — Abismo</div>
+          </div>
+          <!-- Indicador de éxito del cruce -->
+          <div class="amc-success-badge">
+            <div class="amc-success-label">Éxito del Cruce</div>
+            <div class="amc-success-pct" id="adoptionSuccessPct">0%</div>
+          </div>
+        </div>
+
+        <!-- Curva de barras -->
+        <div class="adoption-bars-wrap">
+          <div class="adoption-bars" id="adoptionCurve">
+            <div class="curve-placeholder">Selecciona una propiedad</div>
+          </div>
+        </div>
+
+        <!-- Barra de cierre del abismo -->
+        <div class="amc-chasm-bar" id="chasmMeter" style="display:none">
+          <div class="acb-label-left">0%</div>
+          <div class="acb-track">
+            <div class="acb-fill" id="chasmMeterFill" style="width:0%"></div>
+          </div>
+          <div class="acb-pct" id="chasmPctLabel">—</div>
+          <div class="acb-label-right">100%</div>
+        </div>
+      </div>
+
+      <!-- Hitos de la estrategia (estilo dark card del index5) -->
+      <div class="hitos-card">
+        <div class="hitos-header">
+          <div class="hitos-title">
+            <span class="hitos-icon">🎯</span>
+            <span id="hitosTitle">Hitos de la Estrategia</span>
+          </div>
+          <div class="hitos-prop-badge" id="hitosPropBadge"></div>
+        </div>
+        <div class="hitos-grid" id="hitosGrid">
+          <div style="color:rgba(255,255,255,.4);font-size:clamp(10px,.95vw,13px);padding:20px">Selecciona una propiedad para ver sus módulos</div>
+        </div>
+      </div>
+
+      <!-- KPIs + Gráficas -->
+      <div class="prop-est-bottom-grid">
+        <!-- Estado del abismo KPIs -->
+        <div class="prop-chasm-chart-card">
+          <div class="pcc-header">
+            <div class="pcc-title">Estado del Abismo</div>
+          </div>
+          <div id="propChasmKpis" style="padding:16px">
+            <div style="color:var(--text-muted);font-size:clamp(10px,.95vw,13px);text-align:center;padding:32px 0">Selecciona una propiedad</div>
+          </div>
+        </div>
+        <!-- Radar -->
+        <div class="prop-chasm-chart-card">
+          <div class="pcc-header"><div class="pcc-title">Radar de Cumplimiento</div></div>
+          <div style="height:240px;padding:16px"><canvas id="chartPropRadar"></canvas></div>
+        </div>
+      </div>
+
+      <!-- Avance vs meta por módulo -->
+      <div class="prop-chasm-chart-card" style="margin-top:20px">
+        <div class="pcc-header">
+          <div class="pcc-title">Avance vs Meta — Por Módulo</div>
+          <div class="pcc-sub" id="propModChartSub"></div>
+        </div>
+        <div style="height:260px;padding:16px 20px"><canvas id="chartPropModProgress"></canvas></div>
+      </div>
+
+      <!-- Distribución -->
+      <div class="prop-chasm-chart-card" style="margin-top:20px">
+        <div class="pcc-header"><div class="pcc-title">Distribución por Estado</div></div>
+        <div style="height:220px;padding:16px"><canvas id="chartPropDist"></canvas></div>
+      </div>
+
+    </div>
+
+    <!-- ══ SUB-TAB: ROADMAP ══ -->
+    <div id="propSubRoadmap" style="display:none">
+
+      <!-- Selector de propiedad -->
+      <div class="prop-selector-bar">
+        <span class="prop-selector-label">🏢 Propiedad</span>
+        <div class="prop-dropdown-wrap">
+          <button class="prop-nav-btn" onclick="navPropStep('propDropdownRoad',-1)" title="Anterior">‹</button>
+          <select class="prop-dropdown" id="propDropdownRoad" onchange="selectRoadProp(this.value)"></select>
+          <button class="prop-nav-btn" onclick="navPropStep('propDropdownRoad',1)" title="Siguiente">›</button>
+          <div class="prop-dd-badge" id="propDdBadgeRoad"><span class="prop-dd-dot" style="background:#94a3b8"></span><span class="prop-dd-pct">—</span></div>
+        </div>
+      </div>
+
+      <div class="roadmap-layout">
+        <!-- Columna izquierda: abismo visual + tareas -->
+        <div class="roadmap-main">
+
+          <!-- Card: abismo animado -->
+          <div class="prop-chasm-chart-card" style="margin-bottom:18px">
+            <div class="pcc-header">
+              <div class="pcc-title">Abismo de <span id="roadPropName" style="color:var(--domo)">—</span></div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted)">Sellado:</span>
+                <span class="chasm-seal-pct" id="roadChasmPct">0%</span>
+              </div>
+            </div>
+
+            <!-- Visual: curva adopción mini con abismo -->
+            <div class="road-chasm-visual">
+              <div class="rcv-side rcv-left">
+                <div class="rcv-bar" style="height:54px;background:linear-gradient(180deg,#a34dde,#820ad1)"></div>
+                <div class="rcv-label">Early Adopters</div>
+              </div>
+              <div class="rcv-gap">
+                <div class="rcv-gap-label">ABISMO</div>
+                <div class="rcv-gap-track">
+                  <div class="rcv-gap-sealed" id="chasmGapFill"></div>
+                  <div class="rcv-gap-open" id="chasmGapRemaining"></div>
+                </div>
+                <div class="rcv-gap-pct" id="chasmGapPct">0% sellado</div>
+              </div>
+              <div class="rcv-side rcv-right">
+                <div class="rcv-bar" style="height:80px;background:linear-gradient(180deg,#c77dff,#820ad1)"></div>
+                <div class="rcv-label">Pragmáticos</div>
+              </div>
+            </div>
+
+            <!-- Tareas puente -->
+            <div style="padding:0 20px 18px">
+              <div class="pcc-sub" style="margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px">Tareas sellando el abismo</div>
+              <div id="roadTaskBridges"></div>
+            </div>
+          </div>
+
+          <!-- Lista de tareas -->
+          <div id="roadTaskList"></div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+</div>
+<!-- ══════════════════════════════ END STRATEGY ══════════════════════════════ -->
+
+
+<!-- ══════════════════════ TASKS SECTION ══════════════════════ -->
+<div id="sec-tasks" style="display:none" class="fade-in">
+
+
+
+  <!-- Header -->
+  <div class="tasks-header">
+    <div>
+      <div class="tasks-eyebrow">✅ Gestión de Tareas · DomoNow</div>
+      <div class="tasks-title">Tareas por Propiedad</div>
+      <div class="tasks-sub">Asigna tareas a cada propiedad. Su progreso combinado con los módulos activos sella el abismo de adopción.</div>
+    </div>
+    <div class="tasks-global-pct">
+      <div class="tgp-label">Cierre global</div>
+      <div class="tgp-val" id="tasksGlobalPct">—</div>
+    </div>
+  </div>
+
+  <!-- Layout: property selector (left) + task panel (right) -->
+  <div class="tasks-layout">
+
+    <!-- Left: property list -->
+    <div class="tasks-prop-list" id="tasksPropList"></div>
+
+    <!-- Right: task detail panel -->
+    <div class="tasks-panel" id="tasksPanel">
+      <div class="tasks-empty-state" id="tasksEmptyState">
+        <div style="font-size:clamp(28px,3vw,40px);margin-bottom:clamp(8px,.8vw,12px)">🏢</div>
+        <div style="font-size:clamp(11px,1.1vw,15px);font-weight:700;color:var(--text);margin-bottom:6px">Selecciona una propiedad</div>
+        <div style="font-size:clamp(10px,.9vw,12px);color:var(--text-muted)">Elige una propiedad de la izquierda para gestionar sus tareas</div>
+      </div>
+
+      <!-- Property detail (hidden until selected) -->
+      <div id="tasksPropDetail" style="display:none">
+
+        <!-- Mini curva de adopción -->
+        <div class="tasks-adoption-card">
+          <div class="tac-header">
+            <div>
+              <div class="tac-eyebrow">Curva de Adopción</div>
+              <div class="tac-propname" id="tacPropName">—</div>
+            </div>
+            <div class="tac-chasm-badge">
+              <div class="tac-cb-label">Éxito del Cruce</div>
+              <div class="tac-cb-pct" id="tacChasmPct">0%</div>
+            </div>
+          </div>
+
+          <!-- Mini barras de adopción -->
+          <div class="tac-bars" id="tacBars">
+            <!-- rendered by JS -->
+          </div>
+
+          <!-- Barra de progreso del abismo -->
+          <div class="tac-progress-wrap">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+              <span style="font-size:clamp(8px,.8vw,10px);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px">Cierre del Abismo</span>
+              <div style="display:flex;align-items:center;gap:8px">
+                <span style="font-size:clamp(10px,.9vw,12px);font-weight:800;color:var(--domo)" id="tacSealPct">0%</span>
+                <span id="tacSealCheck" style="font-size:18px;display:none">✅</span>
+              </div>
+            </div>
+            <div class="tac-bar-track" style="height:12px;border-radius:6px">
+              <div class="tac-bar-mods" id="tacBarMods" style="width:0%"></div>
+              <div class="tac-bar-tasks" id="tacBarTasks" style="width:0%"></div>
+            </div>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px">
+              <div style="display:flex;gap:14px">
+                <div style="display:flex;align-items:center;gap:5px"><div style="width:8px;height:8px;border-radius:2px;background:#820ad1"></div><span style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted)">Módulos</span></div>
+                <div style="display:flex;align-items:center;gap:5px"><div style="width:8px;height:8px;border-radius:2px;background:#00b460"></div><span style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted)">Tareas</span></div>
+              </div>
+              <div id="tacSealMsg" style="font-size:clamp(9px,.85vw,10px);font-weight:700;display:none"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Add task form -->
+        <div class="task-add-form" id="taskAddForm">
+          <div class="taf-title">+ Nueva Tarea</div>
+          <div class="taf-row" style="margin-bottom:10px">
+            <div class="taf-field" style="min-width:200px;max-width:300px">
+              <div class="taf-label">🏢 Propiedad</div>
+              <select id="tafPropSelect" class="form-select" style="font-family:'Montserrat',sans-serif;font-size:clamp(10px,.95vw,13px);font-weight:600;border:1.5px solid var(--domo);background:var(--surface2);color:var(--text)" onchange="selectTaskPropFromDropdown(this.value)">
+                <option value="">— Selecciona propiedad —</option>
+              </select>
+            </div>
+          </div>
+          <div class="taf-row">
+            <div class="taf-field">
+              <div class="taf-label">Categoría</div>
+              <div class="taf-cats" id="tafCatBtns">
+                <button class="taf-cat taf-cat-active" style="border-color:#34d399;color:#34d399" onclick="setTaskCat('Innovadores',this)">🟢 Innovadores</button>
+                <button class="taf-cat" style="" onclick="setTaskCat('Visionarios',this)">🟩 Visionarios</button>
+                <button class="taf-cat" onclick="setTaskCat('Pragmáticos',this)">🟡 Pragmáticos</button>
+                <button class="taf-cat" onclick="setTaskCat('Conservadores',this)">🔴 Conservadores</button>
+                <button class="taf-cat" onclick="setTaskCat('Escépticos',this)">⬜ Escépticos</button>
+              </div>
+            </div>
+            <div class="taf-field" style="flex:2">
+              <div class="taf-label">Descripción de la tarea</div>
+              <input type="text" id="tafTaskText" class="form-input" placeholder="Ej: Digitalizar acceso de visitantes..." style="font-family:'Montserrat',sans-serif"/>
+            </div>
+            <div class="taf-field" style="min-width:140px">
+              <div class="taf-label">Peso (impacto en abismo)</div>
+              <div style="display:flex;align-items:center;gap:8px">
+                <input type="range" min="1" max="10" value="5" id="tafWeight" style="flex:1;accent-color:var(--domo)" oninput="$('tafWeightVal').textContent=this.value"/>
+                <span id="tafWeightVal" style="font-size:clamp(12px,1.3vw,18px);font-weight:800;color:var(--domo);min-width:22px">5</span>
+              </div>
+            </div>
+            <button onclick="addTaskForProp()" class="btn-primary taf-add-btn">Agregar</button>
+          </div>
+        </div>
+
+        <!-- Task list -->
+        <div id="tasksListWrap"></div>
+      </div>
+    </div>
+  </div>
+</div>
+<!-- ══════════════════════ END TASKS ══════════════════════ -->
+
+<!-- ══ ABISMO SUB-SECTIONS (each renders inside strategy layout) ══ -->
+<div id="sec-abismo-propiedad" style="display:none" class="fade-in">
+  <div class="strategy-header">
+    <div class="sh-top">
+      <div style="flex:1;min-width:0;position:relative;z-index:1">
+        <div class="sh-badge">🧭 Vista Estratégica · DomoNow</div>
+        <div class="sh-title">Abismo — Por Propiedad</div>
+        <div class="sh-sub">Módulos activos y estado de cumplimiento por propiedad.</div>
+      </div>
+    </div>
+    <div class="sh-metrics" id="strategyGlobalMetrics2"></div>
+  </div>
+  <div id="abismo-prop-filters" style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;margin-bottom:20px">
+    <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+      <span style="font-size:clamp(9px,.85vw,11px);font-weight:700;color:var(--text-muted)">FILTRAR:</span>
+      <div class="filter-tabs" id="strategyPhaseTabs2">
+        <div class="filter-tab active" onclick="setStratPhaseNav('all',this,'2')">Todas</div>
+        <div class="filter-tab" onclick="setStratPhaseNav('fase0',this,'2')">Fase 0</div>
+        <div class="filter-tab" onclick="setStratPhaseNav('fase1',this,'2')">Fase 1</div>
+        <div class="filter-tab" onclick="setStratPhaseNav('fase2',this,'2')">Fase 2</div>
+        <div class="filter-tab" onclick="setStratPhaseNav('fase3',this,'2')">Fase 3</div>
+      </div>
+    </div>
+    <div class="abismo-legend">
+      <div class="legend-item"><div class="legend-dot" style="background:#e03030"></div> Crítico &lt;50%</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#e67e00"></div> Alerta 50–79%</div>
+      <div class="legend-item"><div class="legend-dot" style="background:#00b460"></div> Meta ≥80%</div>
+    </div>
+  </div>
+  <div class="abismo-grid" id="abismoGrid2"></div>
+</div>
+
+<div id="sec-abismo-porpropiedad" style="display:none" class="fade-in">
+  <div class="strategy-header">
+    <div class="sh-top">
+      <div style="flex:1;min-width:0;position:relative;z-index:1">
+        <div class="sh-badge">🧭 Vista Estratégica · DomoNow</div>
+        <div class="sh-title">Abismo — Por Propiedad</div>
+        <div class="sh-sub">Curva de adopción, hitos y cierre de abismo por propiedad.</div>
+      </div>
+    </div>
+  </div>
+  <!-- reuse prop sub-view logic but with fresh IDs -->
+  <div class="prop-subtabs-bar" style="margin-bottom:20px">
+    <button id="navPropSubTabEst" class="prop-subtab prop-subtab-active" onclick="setNavPropSubTab('estrategia')">🧭 Estrategia</button>
+    <button id="navPropSubTabRoad" class="prop-subtab" onclick="setNavPropSubTab('roadmap')">🗺️ Roadmap</button>
+  </div>
+  <div id="navPropSubStrategia">
+    <div class="prop-selector-bar">
+      <span class="prop-selector-label">🏢 Propiedad</span>
+      <div class="prop-dropdown-wrap">
+        <button class="prop-nav-btn" onclick="navPropStep('navPropDropdown',-1)" title="Anterior">‹</button>
+        <select class="prop-dropdown" id="navPropDropdown" onchange="navSelectPropChasm(this.value)"></select>
+        <button class="prop-nav-btn" onclick="navPropStep('navPropDropdown',1)" title="Siguiente">›</button>
+        <div class="prop-dd-badge" id="navPropDdBadge"><span class="prop-dd-dot" style="background:#94a3b8"></span><span class="prop-dd-pct">—</span></div>
+      </div>
+    </div>
+    <div class="adoption-main-card">
+      <div class="amc-header">
+        <div>
+          <div class="amc-eyebrow">🧭 Vista Estratégica · DomoNow</div>
+          <div class="amc-title" id="navPropChasmTitle">Curva de Adopción</div>
+        </div>
+        <div class="amc-success-badge">
+          <div class="amc-success-label">Éxito del Cruce</div>
+          <div class="amc-success-pct" id="navAdoptionSuccessPct">0%</div>
+        </div>
+      </div>
+      <div class="adoption-bars-wrap">
+        <div class="adoption-bars" id="navAdoptionCurve"><div class="curve-placeholder">Selecciona una propiedad</div></div>
+      </div>
+      <div class="amc-chasm-bar" id="navChasmMeter" style="display:none">
+        <div class="acb-label-left">0%</div>
+        <div class="acb-track"><div class="acb-fill" id="navChasmMeterFill" style="width:0%"></div></div>
+        <div class="acb-pct" id="navChasmPctLabel">—</div>
+        <div class="acb-label-right">100%</div>
+      </div>
+    </div>
+    <div class="hitos-card">
+      <div class="hitos-header">
+        <div class="hitos-title"><span class="hitos-icon">🎯</span><span id="navHitosTitle">Hitos de la Estrategia</span></div>
+        <div class="hitos-prop-badge" id="navHitosPropBadge"></div>
+      </div>
+      <div class="hitos-grid" id="navHitosGrid"><div style="color:rgba(255,255,255,.4);font-size:clamp(10px,.95vw,13px);padding:20px">Selecciona una propiedad</div></div>
+    </div>
+    <div class="prop-est-bottom-grid" style="margin-top:20px">
+      <div class="prop-chasm-chart-card">
+        <div class="pcc-header"><div class="pcc-title">Estado del Abismo</div></div>
+        <div id="navPropChasmKpis" style="padding:16px"><div style="color:var(--text-muted);font-size:clamp(10px,.95vw,13px);text-align:center;padding:32px 0">Selecciona una propiedad</div></div>
+      </div>
+      <div class="prop-chasm-chart-card">
+        <div class="pcc-header"><div class="pcc-title">Radar de Cumplimiento</div></div>
+        <div style="height:240px;padding:16px"><canvas id="navChartPropRadar"></canvas></div>
+      </div>
+    </div>
+  </div>
+  <div id="navPropSubRoadmap" style="display:none">
+    <div class="prop-selector-bar">
+      <span class="prop-selector-label">🏢 Propiedad</span>
+      <div class="prop-dropdown-wrap">
+        <button class="prop-nav-btn" onclick="navPropStep('navPropDropdownRoad',-1)" title="Anterior">‹</button>
+        <select class="prop-dropdown" id="navPropDropdownRoad" onchange="navSelectRoadProp(this.value)"></select>
+        <button class="prop-nav-btn" onclick="navPropStep('navPropDropdownRoad',1)" title="Siguiente">›</button>
+        <div class="prop-dd-badge" id="navPropDdBadgeRoad"><span class="prop-dd-dot" style="background:#94a3b8"></span><span class="prop-dd-pct">—</span></div>
+      </div>
+    </div>
+    <div class="roadmap-layout">
+      <div class="roadmap-main">
+        <div class="prop-chasm-chart-card" style="margin-bottom:18px">
+          <div class="pcc-header">
+            <div class="pcc-title">Abismo de <span id="navRoadPropName" style="color:var(--domo)">—</span></div>
+            <div style="display:flex;align-items:center;gap:8px"><span style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted)">Sellado:</span><span class="chasm-seal-pct" id="navRoadChasmPct">0%</span></div>
+          </div>
+          <div class="road-chasm-visual">
+            <div class="rcv-side rcv-left"><div class="rcv-bar" style="height:54px;background:linear-gradient(180deg,#a34dde,#820ad1)"></div><div class="rcv-label">Early Adopters</div></div>
+            <div class="rcv-gap">
+              <div class="rcv-gap-label">ABISMO</div>
+              <div class="rcv-gap-track"><div class="rcv-gap-sealed" id="navChasmGapFill"></div><div class="rcv-gap-open" id="navChasmGapRemaining"></div></div>
+              <div class="rcv-gap-pct" id="navChasmGapPct">0% sellado</div>
+            </div>
+            <div class="rcv-side rcv-right"><div class="rcv-bar" style="height:80px;background:linear-gradient(180deg,#c77dff,#820ad1)"></div><div class="rcv-label">Pragmáticos</div></div>
+          </div>
+          <div style="padding:0 20px 18px">
+            <div class="pcc-sub" style="margin-bottom:10px;text-transform:uppercase;letter-spacing:.6px">Tareas sellando el abismo</div>
+            <div id="navRoadTaskBridges"></div>
+          </div>
+        </div>
+        <div id="navRoadTaskList"></div>
+      </div>
+      <div class="roadmap-sidebar">
+        <div class="prop-chasm-chart-card" style="position:sticky;top:80px">
+          <div class="pcc-header"><div class="pcc-title">+ Nueva Tarea</div></div>
+          <div style="padding:16px;display:flex;flex-direction:column;gap:14px">
+            <div>
+              <div class="road-field-label">Categoría</div>
+              <div class="road-cat-grid" id="navRoadCategoryBtns">
+                <button onclick="setNavRoadCategory('Administradores',this)" class="road-cat-btn road-cat-active">Admins</button>
+                <button onclick="setNavRoadCategory('Multiplicadores',this)" class="road-cat-btn">Multiplicadores</button>
+                <button onclick="setNavRoadCategory('Comunidad',this)" class="road-cat-btn">Comunidad</button>
+                <button onclick="setNavRoadCategory('Junta',this)" class="road-cat-btn">Junta</button>
+              </div>
+            </div>
+            <div>
+              <div class="road-field-label">Descripción</div>
+              <textarea id="navRoadNewTaskText" class="form-textarea" style="min-height:80px;font-size:12px" placeholder="Ej: Activar módulo de acceso..."></textarea>
+            </div>
+            <div>
+              <div class="road-field-label">Peso en cierre del abismo</div>
+              <div style="display:flex;align-items:center;gap:10px;margin-top:6px">
+                <input type="range" min="1" max="10" value="5" id="navRoadTaskWeight" style="flex:1;accent-color:var(--domo)" oninput="$('navRoadWeightVal').textContent=this.value"/>
+                <div style="min-width:36px;text-align:center"><span id="navRoadWeightVal" style="font-size:clamp(12px,1.3vw,18px);font-weight:800;color:var(--domo)">5</span></div>
+              </div>
+            </div>
+            <button onclick="navAddRoadTask()" class="btn-primary" style="width:100%;font-family:'Montserrat',sans-serif">+ Agregar Tarea</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ AVANCE LINEAL ══ -->
+<!-- ══════════ AVANCE LINEAL SECTION ══════════ -->
+<div id="sec-lineal" class="fade-in">
+
+  <!-- Header -->
+  <div class="strategy-header">
+    <div style="position:relative;z-index:1">
+      <div class="sh-badge">📉 Progresión Temporal · DomoNow</div>
+      <div class="sh-title">Avance Lineal por Semana</div>
+      <div class="sh-sub">Seguimiento semanal de cada módulo contra la línea esperada. Meta: 80% de usabilidad en 8 semanas (~10%/semana).</div>
+    </div>
+    <div class="sh-metrics" id="linealGlobalMetrics"></div>
+  </div>
+
+  <!-- Sub-tab nav -->
+  <div class="strat-tab-nav">
+    <button class="strat-tab-btn strat-tab-active" id="linealTab1" onclick="setLinealTab('overview',this)"><span>📊</span> Resumen Global</button>
+    <button class="strat-tab-btn" id="linealTab2" onclick="setLinealTab('module',this)"><span>📉</span> Progreso por Módulo</button>
+    <button class="strat-tab-btn" id="linealTab3" onclick="setLinealTab('compare',this)"><span>⚖️</span> Comparativa Semanal</button>
+    <button class="strat-tab-btn" id="linealTab4" onclick="setLinealTab('semaforo',this)"><span>🚦</span> Semáforo de Cumplimiento</button>
+  </div>
+
+  <!-- ══ TAB: OVERVIEW ══ -->
+  <div id="linealViewOverview">
+    <div class="prop-selector-bar">
+      <span class="prop-selector-label">🏢 Propiedad</span>
+      <div class="prop-dropdown-wrap">
+        <button class="prop-nav-btn" onclick="navPropStep('linealPropDrop',-1)">‹</button>
+        <select class="prop-dropdown" id="linealPropDrop" onchange="selectLinealProp(this.value)"></select>
+        <button class="prop-nav-btn" onclick="navPropStep('linealPropDrop',1)">›</button>
+        <div class="prop-dd-badge" id="linealPropBadge">
+          <span class="prop-dd-dot" style="background:#94a3b8"></span>
+          <span class="prop-dd-pct">Sem. <span id="linealCurWeekBadge">—</span>/8</span>
+        </div>
+      </div>
+    </div>
+    <div class="overview-kpi-row" id="linealKpiRow"></div>
+    <div class="prop-chasm-chart-card">
+      <div class="pcc-header">
+        <div class="pcc-title">Progresión Global — Todas las Semanas</div>
+        <div class="pcc-sub" id="linealOverviewSub">Meta: 10% semanal · 80% final</div>
+      </div>
+      <div style="height:340px;padding:20px"><canvas id="chartLinealOverview"></canvas></div>
+    </div>
+    <div style="margin-bottom:8px;font-size:clamp(9px,.85vw,11px);font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:.8px;margin-top:4px">Detalle por Semana</div>
+    <div id="linealWeekCards" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:12px;margin-bottom:24px"></div>
+  </div>
+
+  <!-- ══ TAB: MODULE ══ -->
+  <div id="linealViewModule" style="display:none">
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:20px">
+      <div class="prop-selector-bar" style="margin-bottom:0">
+        <span class="prop-selector-label">🏢 Propiedad</span>
+        <div class="prop-dropdown-wrap">
+          <button class="prop-nav-btn" onclick="navPropStep('linealModPropDrop',-1)">‹</button>
+          <select class="prop-dropdown" id="linealModPropDrop" onchange="selectLinealModProp(this.value)"></select>
+          <button class="prop-nav-btn" onclick="navPropStep('linealModPropDrop',1)">›</button>
+        </div>
+      </div>
+      <div class="prop-selector-bar" style="margin-bottom:0">
+        <span class="prop-selector-label">🧩 Módulo</span>
+        <div class="prop-dropdown-wrap">
+          <button class="prop-nav-btn" onclick="navModStep(-1)">‹</button>
+          <select class="prop-dropdown" id="linealModDrop" onchange="selectLinealMod(this.value)"></select>
+          <button class="prop-nav-btn" onclick="navModStep(1)">›</button>
+        </div>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:20px" id="linealModKpis"></div>
+    <div class="prop-chasm-chart-card">
+      <div class="pcc-header">
+        <div class="pcc-title" id="linealModChartTitle">Progresión del Módulo</div>
+        <div class="pcc-sub" id="linealModChartSub"></div>
+      </div>
+      <div style="height:320px;padding:20px"><canvas id="chartLinealMod"></canvas></div>
+    </div>
+    <div class="table-card">
+      <div class="table-topbar"><div class="section-title" style="margin-bottom:0" id="linealModTableTitle">Desglose Semanal</div></div>
+      <div style="overflow-x:auto">
+        <table>
+          <thead><tr>
+            <th>Semana</th><th>Valor Real</th><th>Meta</th>
+            <th>% Real</th><th>% Esperado</th><th>Índice Cumpl.</th><th>Estado</th>
+          </tr></thead>
+          <tbody id="linealModTableBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: COMPARE ══ -->
+  <div id="linealViewCompare" style="display:none">
+    <div class="prop-selector-bar">
+      <span class="prop-selector-label">🏢 Propiedad</span>
+      <div class="prop-dropdown-wrap">
+        <button class="prop-nav-btn" onclick="navPropStep('linealCmpPropDrop',-1)">‹</button>
+        <select class="prop-dropdown" id="linealCmpPropDrop" onchange="selectLinealCmpProp(this.value)"></select>
+        <button class="prop-nav-btn" onclick="navPropStep('linealCmpPropDrop',1)">›</button>
+      </div>
+    </div>
+    <div style="display:flex;gap:16px;align-items:flex-end;flex-wrap:wrap;margin-bottom:20px">
+      <div>
+        <div style="font-size:clamp(8px,.8vw,10px);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Semana A</div>
+        <select class="prop-dropdown" id="cmpWeekA" style="max-width:160px" onchange="renderCompareView()">
+          <option value="1">Semana 1</option><option value="2">Semana 2</option>
+          <option value="3" selected>Semana 3</option><option value="4">Semana 4</option>
+          <option value="5">Semana 5</option><option value="6">Semana 6</option>
+          <option value="7">Semana 7</option><option value="8">Semana 8</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:clamp(8px,.8vw,10px);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Semana B</div>
+        <select class="prop-dropdown" id="cmpWeekB" style="max-width:160px" onchange="renderCompareView()">
+          <option value="1">Semana 1</option><option value="2">Semana 2</option>
+          <option value="3">Semana 3</option><option value="4">Semana 4</option>
+          <option value="5">Semana 5</option><option value="6" selected>Semana 6</option>
+          <option value="7">Semana 7</option><option value="8">Semana 8</option>
+        </select>
+      </div>
+    </div>
+    <div class="prop-chasm-chart-card">
+      <div class="pcc-header">
+        <div class="pcc-title" id="cmpChartTitle">Semana A vs Semana B</div>
+        <div class="pcc-sub" id="cmpChartSub"></div>
+      </div>
+      <div style="height:320px;padding:20px"><canvas id="chartLinealCmp"></canvas></div>
+    </div>
+    <div class="table-card">
+      <div class="table-topbar"><div class="section-title" style="margin-bottom:0">Tabla Comparativa por Módulo</div></div>
+      <div style="overflow-x:auto"><table><thead id="cmpTableHead"></thead><tbody id="cmpTableBody"></tbody></table></div>
+    </div>
+  </div>
+
+  <!-- ══ TAB: SEMÁFORO ══ -->
+  <div id="linealViewSemaforo" style="display:none">
+    <div class="prop-selector-bar">
+      <span class="prop-selector-label">🏢 Propiedad</span>
+      <div class="prop-dropdown-wrap">
+        <button class="prop-nav-btn" onclick="navPropStep('linealSemPropDrop',-1)">‹</button>
+        <select class="prop-dropdown" id="linealSemPropDrop" onchange="selectLinealSemProp(this.value)"></select>
+        <button class="prop-nav-btn" onclick="navPropStep('linealSemPropDrop',1)">›</button>
+      </div>
+    </div>
+    <div id="semaforoGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px;margin-bottom:24px"></div>
+    <div class="prop-chasm-chart-card">
+      <div class="pcc-header">
+        <div class="pcc-title">Radar de Índices de Cumplimiento</div>
+        <div class="pcc-sub" id="semaforoRadarSub"></div>
+      </div>
+      <div style="height:340px;padding:20px"><canvas id="chartSemaforoRadar"></canvas></div>
+    </div>
+  </div>
+
+</div>
+
+
+<!-- ══ END AVANCE LINEAL ══ -->
+
+</div></main>
+
+<!-- MODAL -->
+<div class="modal-overlay" id="propModal" style="display:none" onclick="closeModalOutside(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title" id="modalTitle">Agregar Propiedad</div><div id="modalSaveStatus" style="font-size:10px;font-weight:700;color:#00b460;margin-top:2px;display:none">💾 Guardado automáticamente</div>
+      <div class="modal-close" onclick="closeModal()">✕</div>
+    </div>
+    <div class="modal-body">
+      <input type="hidden" id="editPropId"/>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Nombre *</label><input class="form-input" id="fName" placeholder="Ej: Conjunto Los Pinos"/></div>
+        <div class="form-group"><label class="form-label">Ciudad</label><input class="form-input" id="fCity" placeholder="Ej: Medellín"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group"><label class="form-label">Fase *</label>
+          <select class="form-select" id="fPhase" onchange="onPhaseChange()">
+            <option value="fase0">Fase 0 — Configuración y Capacitación</option>
+            <option value="fase1">Fase 1 — Acceso, Pánico, Muro, Solicitudes</option>
+            <option value="fase2">Fase 2 — Zonas, Encuestas, Votaciones, Eventos</option>
+            <option value="fase3">Fase 3 — Asambleas, Normativo, Documental, Financiero, SuperAdmin</option>
+          </select>
+        </div>
+        <div class="form-group"><label class="form-label">Días en Fase</label><input class="form-input" id="fDays" readonly style="background:var(--surface2);color:var(--text-muted)" type="number" min="0" value="0"/></div>
+      </div>
+      <div class="form-row">
+        <div class="form-group">
+          <div id="fDaysHint" style="font-size:11px;color:var(--domo);font-weight:600;margin:-4px 0 10px"></div><label class="form-label">Total Unidades (apartamentos)</label>
+          <input class="form-input" id="fUnits" type="number" min="1" value="50" oninput="rebuildModuleChecks()"/>
+          <div class="form-hint">Las metas se calculan sobre el 50% de este número</div>
+        </div>
+        <div class="form-group">
+          <label class="form-label">📅 Fecha de Ingreso <span style="font-size:10px;color:var(--text-muted);font-weight:400">(modifica si hay retraso o adelanto)</span></label>
+          <input class="form-input" id="fEntryDate" type="date" onchange="autoCalcDays()"/>
+          <div style="display:flex;gap:6px;margin-top:6px;flex-wrap:wrap">
+            <button type="button" class="date-adj-btn" onclick="adjustEntryDate(-7)">− 1 semana</button>
+            <button type="button" class="date-adj-btn" onclick="adjustEntryDate(-1)">− 1 día</button>
+            <button type="button" class="date-adj-btn date-adj-today" onclick="setEntryDateToday()">Hoy</button>
+            <button type="button" class="date-adj-btn" onclick="adjustEntryDate(1)">+ 1 día</button>
+            <button type="button" class="date-adj-btn" onclick="adjustEntryDate(7)">+ 1 semana</button>
+          </div>
+        </div>
+      </div>
+      <div class="form-group">
+        <div class="mod-section-label">Módulos activos — ingresa el valor real alcanzado</div>
+        <div id="modulesChecks"></div>
+      </div>
+      <div class="form-group"><label class="form-label">Notas</label><textarea class="form-textarea" id="fNotes" placeholder="Observaciones..."></textarea></div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn-outline" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary" onclick="saveProperty()">💾 Guardar</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast-wrap" id="toastContainer"></div>
+
+<!-- ══ QUICK DATE EDIT MODAL ══ -->
+<div class="modal-overlay" id="quickDateModal" style="display:none" onclick="closeQuickDateModal(event)">
+  <div class="modal" style="max-width:380px">
+    <div class="modal-header">
+      <div class="modal-title">📅 Cambiar Fecha de Ingreso</div>
+      <div class="modal-close" onclick="document.getElementById('quickDateModal').style.display='none'">✕</div>
+    </div>
+    <div class="modal-body" style="padding:20px">
+      <input type="hidden" id="qdPropId"/>
+      <div class="form-group">
+        <label class="form-label" id="qdPropName" style="color:var(--domo);font-size:13px">Propiedad</label>
+        <input class="form-input" id="qdDate" type="date" onchange="updateQuickDateHint()"/>
+        <div id="qdHint" style="font-size:11px;color:var(--domo);font-weight:600;margin-top:6px"></div>
+      </div>
+      <div style="display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap">
+        <button type="button" class="date-adj-btn" onclick="adjustQD(-14)">− 2 sem.</button>
+        <button type="button" class="date-adj-btn" onclick="adjustQD(-7)">− 1 sem.</button>
+        <button type="button" class="date-adj-btn" onclick="adjustQD(-1)">− 1 día</button>
+        <button type="button" class="date-adj-btn date-adj-today" onclick="adjustQD(0)">Hoy</button>
+        <button type="button" class="date-adj-btn" onclick="adjustQD(1)">+ 1 día</button>
+        <button type="button" class="date-adj-btn" onclick="adjustQD(7)">+ 1 sem.</button>
+        <button type="button" class="date-adj-btn" onclick="adjustQD(14)">+ 2 sem.</button>
+      </div>
+      <div style="display:flex;gap:10px">
+        <button class="btn-primary" style="flex:1" onclick="saveQuickDate()">💾 Guardar</button>
+        <button class="btn-secondary" onclick="document.getElementById('quickDateModal').style.display='none'">Cancelar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+  <!-- Scripts -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="config.js"></script>
+  <script src="js/app.js" defer></script>
+</body>
+</html>

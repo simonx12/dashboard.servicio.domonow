@@ -1,0 +1,29 @@
+/* ══════════════════════════════════════════
+   BASE.CSS — Variables, Reset, Tipografía
+   ══════════════════════════════════════════ */
+
+:root {
+  --domo:#820ad1;--domo-70:#a34dde;--domo-30:#ddb3f3;
+  --gold:#F7B500;
+  --bg:#f4f3fa;--surface:#fff;--surface2:#f0edf8;--surface3:#e8e3f5;
+  --border:#e0d9f5;--text:#16122a;--text-muted:#7c6fa0;
+  --shadow:0 2px 14px rgba(130,10,209,.07);
+  --shadow-md:0 6px 30px rgba(130,10,209,.13);
+  --radius:18px;
+  --green:#00b460;--blue:#0088cc;--orange:#e67e00;--red:#e03030;
+}
+[data-theme="dark"]{
+  --bg:#0d0a1a;--surface:#15102a;--surface2:#1e1838;--surface3:#261e46;
+  --border:#2d2448;--text:#ede9ff;--text-muted:#9287b8;
+  --shadow:0 2px 14px rgba(0,0,0,.4);--shadow-md:0 6px 30px rgba(0,0,0,.5);
+}
+
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{font-size:clamp(13px,1vw + 6px,16px)}
+body{font-family:'Montserrat',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:background .3s,color .3s;overflow-x:hidden}
+
+/* ── Animations ── */
+.fade-in{animation:fIn .4s ease}
+@keyframes fIn{from{opacity:0;transform:translateY(7px)}to{opacity:1;transform:none}}
+@keyframes mIn{from{opacity:0;transform:scale(.95) translateY(18px)}to{opacity:1;transform:none}}
+@keyframes tIn{from{opacity:0;transform:translateX(36px)}to{opacity:1;transform:none}}

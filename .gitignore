@@ -1,0 +1,20 @@
+# ── Credenciales y configuración sensible ──
+config.js
+
+# ── Sistema operativo ──
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ── Editores ──
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# ── Logs ──
+*.log
+npm-debug.log*
+
+# ── Dependencias (si se agregan en el futuro) ──
+node_modules/

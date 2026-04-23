@@ -1,0 +1,104 @@
+/* ══ AVANCE LINEAL CSS ══ */
+/* ══════════════════════════════════════════
+   AVANCE LINEAL — CSS
+══════════════════════════════════════════ */
+
+/* Semáforo card */
+.sem-card {
+  background: var(--surface);
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+  transition: all .25s;
+}
+.sem-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.sem-header {
+  padding: 14px 18px 12px;
+  border-bottom: 1px solid var(--border);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.sem-icon-name { display: flex; align-items: center; gap: 10px; }
+.sem-icon { font-size: clamp(16px,1.8vw,22px); }
+.sem-name { font-size: clamp(11px,1vw,14px); font-weight: 800; }
+.sem-light-wrap {
+  display: flex; align-items: center; justify-content: center;
+  gap: 6px; padding: 14px 18px;
+}
+.sem-light {
+  width: clamp(18px,1.6vw,22px);
+  height: clamp(18px,1.6vw,22px);
+  border-radius: 50%;
+  border: 2px solid rgba(0,0,0,.15);
+  transition: all .4s;
+}
+.sem-light.sem-on-red    { background: #e03030; box-shadow: 0 0 12px 4px rgba(224,48,48,.5); }
+.sem-light.sem-on-yellow { background: #f7b500; box-shadow: 0 0 12px 4px rgba(247,181,0,.5); }
+.sem-light.sem-on-green  { background: #00b460; box-shadow: 0 0 12px 4px rgba(0,180,100,.5); }
+.sem-light.sem-off       { background: var(--surface3); opacity: .3; }
+.sem-body { padding: 0 18px 16px; }
+.sem-index-val {
+  font-size: clamp(20px,2.4vw,32px);
+  font-weight: 900;
+  font-family: 'JetBrains Mono', monospace;
+  line-height: 1;
+  margin-bottom: 4px;
+  text-align: center;
+}
+.sem-label {
+  font-size: clamp(8px,.8vw,10px);
+  font-weight: 700;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .7px;
+  text-align: center;
+  margin-bottom: 10px;
+}
+.sem-bar-row {
+  display: flex; align-items: center; gap: 8px; margin-bottom: 6px;
+}
+.sem-bar-label { font-size: clamp(8px,.75vw,9px); font-weight: 700; color: var(--text-muted); min-width: 56px; }
+.sem-bar-track { flex: 1; height: 5px; border-radius: 3px; background: var(--surface2); overflow: hidden; }
+.sem-bar-fill  { height: 100%; border-radius: 3px; transition: width .8s ease; }
+.sem-pct       { font-size: clamp(9px,.85vw,11px); font-weight: 800; min-width: 38px; text-align: right; }
+.sem-week-info {
+  font-size: clamp(8px,.8vw,10px);
+  color: var(--text-muted);
+  text-align: center;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+  margin-top: 8px;
+}
+
+/* Week mini cards */
+.week-mini-card {
+  background: var(--surface);
+  border-radius: 14px;
+  border: 1.5px solid var(--border);
+  padding: 14px 16px;
+  transition: all .2s;
+}
+.week-mini-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.week-mini-card.wmc-active { border-color: var(--domo); background: rgba(130,10,209,.04); }
+.wmc-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; }
+.wmc-week { font-size: clamp(9px,.85vw,11px); font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: .7px; }
+.wmc-index {
+  font-size: clamp(10px,.95vw,13px);
+  font-weight: 800;
+  padding: 2px 8px;
+  border-radius: 20px;
+}
+.wmc-index.idx-green  { background: rgba(0,180,100,.15); color: #00b460; }
+.wmc-index.idx-yellow { background: rgba(247,181,0,.18); color: #b87e00; }
+.wmc-index.idx-red    { background: rgba(224,48,48,.12); color: #e03030; }
+.wmc-real  { font-size: clamp(18px,2vw,26px); font-weight: 900; line-height: 1; margin-bottom: 3px; }
+.wmc-exp   { font-size: clamp(10px,.9vw,12px); color: var(--text-muted); }
+.wmc-bar-track { width: 100%; height: 5px; border-radius: 3px; background: var(--surface2); overflow: hidden; margin-top: 8px; position: relative; }
+.wmc-bar-fill  { height: 100%; border-radius: 3px; transition: width .8s ease; }
+.wmc-bar-marker { position: absolute; top: -3px; width: 2px; height: 11px; background: var(--domo); opacity: .6; border-radius: 1px; }
+
+/* Lineal speed gauge */
+.speed-gauge-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+.speed-gauge-arc  { position: relative; width: 100px; height: 56px; overflow: hidden; }
+.speed-gauge-svg  { width: 100%; height: 100%; }
+
