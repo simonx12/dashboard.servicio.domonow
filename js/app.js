@@ -448,7 +448,7 @@ async function fetchAllData(){
   try{
     const{data:props,error}=await sb.from('properties').select('*').order('created_at',{ascending:false});
     if(error)throw error;
-    state.properties=(props||[]).map(p=>({id:p.id,name:p.name||'',city:p.city||'',phase:p.phase||'fase0',days:p.days_elapsed||0,units:p.units||0,modules:Array.isArray(p.active_modules)?p.active_modules:[],module_values:(p.module_values&&typeof p.module_values==='object')?p.module_values:{},notes:p.notes||'',core_notes:p.core_notes||'',entry_date:p.entry_date||''}));
+    state.properties=(props||[]).map(p=>({id:p.id,name:p.name||'',city:p.city||'',phase:p.phase||'fase0',days:p.days_elapsed||0,units:p.units||0,modules:Array.isArray(p.active_modules)?p.active_modules:[],module_values:(p.module_values&&typeof p.module_values==='object')?p.module_values:{},notes:p.notes||'',core_notes:p.core_notes||'',core_list:p.core_list||'',entry_date:p.entry_date||''}));
     state.lastUpdated=new Date();
     // ★ Invalidar caché de progreso (datos nuevos)
     invalidateCache();
@@ -459,8 +459,8 @@ async function fetchAllData(){
   }catch(e){showToast('Error al cargar datos','error');}
 }
 
-async function insertSupabase(prop){if(!sb)return;const{error}=await sb.from('properties').insert({name:prop.name,city:prop.city,phase:prop.phase,days_elapsed:prop.days,units:prop.units,active_modules:prop.modules,module_values:prop.module_values,notes:prop.notes,core_notes:prop.core_notes,entry_date:new Date(prop.entry_date).toISOString()});if(error)showToast('Error: '+error.message,'error');}
-async function updateSupabase(id,prop){if(!sb)return;const edDate=prop.entry_date?new Date(prop.entry_date).toISOString():null;const{error}=await sb.from('properties').update({name:prop.name,city:prop.city,phase:prop.phase,days_elapsed:prop.days,units:prop.units,active_modules:prop.modules,module_values:prop.module_values,notes:prop.notes,core_notes:prop.core_notes,...(edDate?{entry_date:edDate}:{})}).eq('id',id);if(error)showToast('Error: '+error.message,'error');}
+async function insertSupabase(prop){if(!sb)return;const{error}=await sb.from('properties').insert({name:prop.name,city:prop.city,phase:prop.phase,days_elapsed:prop.days,units:prop.units,active_modules:prop.modules,module_values:prop.module_values,notes:prop.notes,core_notes:prop.core_notes,core_list:prop.core_list,entry_date:new Date(prop.entry_date).toISOString()});if(error)showToast('Error: '+error.message,'error');}
+async function updateSupabase(id,prop){if(!sb)return;const edDate=prop.entry_date?new Date(prop.entry_date).toISOString():null;const{error}=await sb.from('properties').update({name:prop.name,city:prop.city,phase:prop.phase,days_elapsed:prop.days,units:prop.units,active_modules:prop.modules,module_values:prop.module_values,notes:prop.notes,core_notes:prop.core_notes,core_list:prop.core_list,...(edDate?{entry_date:edDate}:{})}).eq('id',id);if(error)showToast('Error: '+error.message,'error');}
 async function deleteSupabase(id){if(!sb)return;const{error}=await sb.from('properties').delete().eq('id',id);if(error)showToast('Error: '+error.message,'error');}
 
 function startRealtime(){if(!sb)return;sbChannel=sb.channel('dn-rt').on('postgres_changes',{event:'*',schema:'public',table:'properties'},()=>fetchAllData()).subscribe();}
@@ -611,7 +611,7 @@ function renderModuleCharts(){
 function openAddModal(){
   $('modalTitle').textContent='Agregar Propiedad';$('editPropId').value='';
   $('fName').value='';$('fCity').value='';$('fPhase').value='fase0';
-  $('fDays').value='0';$('fUnits').value='50';$('fNotes').value='';$('fCoreNotes').value='';
+  $('fDays').value='0';$('fUnits').value='50';$('fNotes').value='';$('fCoreNotes').value='';$('fCoreList').value='';
   $('fEntryDate').value=new Date().toISOString().split('T')[0];
   // Auto-activate phase 1 modules
   setTimeout(()=>onPhaseChange(),0);
@@ -622,7 +622,7 @@ function openEditModal(id){
   $('modalTitle').textContent='Editar Propiedad';$('editPropId').value=id;
   $('fName').value=p.name||'';$('fCity').value=p.city||'';$('fPhase').value=p.phase||'fase0';
   $('fDays').value=p.days||0;$('fUnits').value=p.units||0;$('fEntryDate').value=p.entry_date||'';
-  autoCalcDays();$('fNotes').value=p.notes||'';$('fCoreNotes').value=p.core_notes||'';
+  autoCalcDays();$('fNotes').value=p.notes||'';$('fCoreNotes').value=p.core_notes||'';$('fCoreList').value=p.core_list||'';
   // Use the property's existing modules & values (they were set for their phase)
   buildModuleChecks(p.modules||[],p.module_values||{});$('propModal').style.display='flex';
 }
@@ -728,7 +728,7 @@ async function saveProperty(){
     const existing=state.properties.find(x=>String(x.id)===String(editId));
     entryDate=(existing&&existing.entry_date)||'';
   }
-  const prop={name,city:$('fCity').value.trim(),phase:$('fPhase').value,days:parseInt($('fDays').value)||0,units:parseInt($('fUnits').value)||0,entry_date:entryDate,notes:$('fNotes').value.trim(),core_notes:$('fCoreNotes').value.trim(),modules,module_values};
+  const prop={name,city:$('fCity').value.trim(),phase:$('fPhase').value,days:parseInt($('fDays').value)||0,units:parseInt($('fUnits').value)||0,entry_date:entryDate,notes:$('fNotes').value.trim(),core_notes:$('fCoreNotes').value.trim(),core_list:$('fCoreList').value.trim(),modules,module_values};
   closeModal();
   if(editId){
     if(sb){await updateSupabase(editId,prop);await fetchAllData();}
