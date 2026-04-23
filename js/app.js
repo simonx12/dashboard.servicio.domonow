@@ -285,7 +285,36 @@ function renderKPIs(){
   $('kpiImpl').textContent=byPhase('fase1').length;$('kpiImplDays').textContent=avg('fase1');
   $('kpiPilot').textContent=byPhase('fase2').length;$('kpiPilotDays').textContent=avg('fase2');
   $('kpiSupport').textContent=byPhase('fase3').length;$('kpiSupportDays').textContent=avg('fase3');
+
+  // ── Implementación Global ──
+  const implAvg=p.length?Math.round(p.reduce((s,x)=>s+getPropProgress(x),0)/p.length):0;
+  const implColor=implAvg>=80?'#00b460':implAvg>=50?'#e67e00':'#820ad1';
+  const implOnTarget=p.filter(x=>getPropProgress(x)>=80).length;
+  const implEl=$('implGlobalKpis');
+  if(implEl) implEl.innerHTML=`
+    <div style="text-align:right">
+      <div style="font-size:clamp(22px,2.2vw,32px);font-weight:800;color:${implColor};line-height:1">${implAvg}%</div>
+      <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted);margin-top:2px">${implOnTarget}/${p.length} en meta</div>
+    </div>`;
+
+  // ── Usabilidad Global ──
+  let totalActiveMods=0,totalWithUsage=0;
+  p.forEach(x=>{
+    const mv=x.module_values||{};
+    const active=(x.modules||[]).filter(mid=>!NON_MODULES.includes(mid));
+    totalActiveMods+=active.length;
+    totalWithUsage+=active.filter(mid=>(mv[mid]||0)>0).length;
+  });
+  const usabAvg=totalActiveMods>0?Math.round((totalWithUsage/totalActiveMods)*100):0;
+  const usabColor=usabAvg>=80?'#00b460':usabAvg>=50?'#e67e00':'#820ad1';
+  const usabEl=$('usabGlobalKpis');
+  if(usabEl) usabEl.innerHTML=`
+    <div style="text-align:right">
+      <div style="font-size:clamp(22px,2.2vw,32px);font-weight:800;color:${usabColor};line-height:1">${usabAvg}%</div>
+      <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted);margin-top:2px">${totalWithUsage}/${totalActiveMods} mód. en uso</div>
+    </div>`;
 }
+
 
 function getLastFriday(offset=0){const d=new Date();const day=d.getDay();const diff=day>=5?day-5:day+2;d.setDate(d.getDate()-diff+offset);return d.toISOString().split('T')[0];}
 
@@ -514,8 +543,43 @@ function renderProgressSection(){renderGlobalProgress();renderPropertyProgressCa
 function renderGlobalProgress(){
   const props=state.properties,g=getGlobalProgress();
   $('pgValue').textContent=g+'%';$('pgPct').textContent=g+'%';$('pgFill').style.width=g+'%';$('pgRingCenter').textContent=g+'%';
+
+  // ── Usabilidad global: módulos con uso real / módulos activos totales ──
+  let totalActiveMods=0, totalWithUsage=0;
+  props.forEach(p=>{
+    const mv=p.module_values||{};
+    const active=(p.modules||[]).filter(mid=>!NON_MODULES.includes(mid));
+    totalActiveMods+=active.length;
+    totalWithUsage+=active.filter(mid=>(mv[mid]||0)>0).length;
+  });
+  const usabGlobal=totalActiveMods>0?Math.round((totalWithUsage/totalActiveMods)*100):0;
+  const usabColor=usabGlobal>=80?'#00b460':usabGlobal>=50?'#e67e00':'#820ad1';
+  const implColor=g>=80?'#00b460':g>=50?'#e67e00':'#820ad1';
   const totalMods=props.reduce((s,p)=>s+(p.modules||[]).length,0);
+
   $('pgSub').textContent=props.length+' propiedades · '+totalMods+' módulos activos';
+
+  // Inyectar badges de Implementación + Usabilidad debajo del subtítulo
+  const pgLeft=$('pgValue').closest('.pg-left')||$('pgValue').parentElement;
+  let badgeRow=document.getElementById('pgGlobalBadges');
+  if(!badgeRow){
+    badgeRow=document.createElement('div');
+    badgeRow.id='pgGlobalBadges';
+    badgeRow.style.cssText='display:flex;gap:12px;margin-top:12px;flex-wrap:wrap;';
+    $('pgSub').insertAdjacentElement('afterend',badgeRow);
+  }
+  badgeRow.innerHTML=`
+    <div style="background:${implColor}18;border:1.5px solid ${implColor}50;border-radius:12px;padding:10px 16px;min-width:130px;">
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Implementación Global</div>
+      <div style="font-size:24px;font-weight:800;color:${implColor};line-height:1">${g}%</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px">Prom. módulos activos / 13</div>
+    </div>
+    <div style="background:${usabColor}18;border:1.5px solid ${usabColor}50;border-radius:12px;padding:10px 16px;min-width:130px;">
+      <div style="font-size:10px;font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:4px">Usabilidad Global</div>
+      <div style="font-size:24px;font-weight:800;color:${usabColor};line-height:1">${usabGlobal}%</div>
+      <div style="font-size:10px;color:var(--text-muted);margin-top:4px">${totalWithUsage} / ${totalActiveMods} módulos en uso</div>
+    </div>`;
+
   $('pgStats').innerHTML=Object.entries(PHASES).map(([k,cfg])=>{
     const arr=props.filter(p=>p.phase===k);
     const avg=arr.length?Math.round(arr.reduce((s,p)=>s+getPropProgress(p),0)/arr.length):0;
