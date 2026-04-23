@@ -197,30 +197,19 @@
 
 <!-- PROGRESS -->
 <div id="sec-progress" style="display:none" class="fade-in">
-  <div class="progress-global-card">
-    <div class="pg-left">
-      <div class="pg-label">Avance Ponderado Global</div>
-      <div class="pg-value" id="pgValue">0%</div>
-      <div class="pg-sub" id="pgSub">0 propiedades · 0 módulos activos</div>
-      <div class="pg-bar-wrap"><div class="pg-bar"><div class="pg-fill" id="pgFill" style="width:0%"></div></div><span class="pg-pct" id="pgPct">0%</span></div>
-    </div>
-    <div class="pg-stats" id="pgStats"></div>
-    <div class="pg-ring-wrap"><canvas id="pgRing" width="140" height="140"></canvas><div class="pg-ring-center" id="pgRingCenter">0%</div></div>
-  </div>
-
-  <!-- ── Implementación + Usabilidad Global (cards separadas) ── -->
-  <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:16px;margin-bottom:24px">
+  <!-- ── Implementación + Usabilidad Global ── -->
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:24px">
 
     <!-- Implementación Global -->
     <div class="chart-card" id="pgImplCard">
       <div class="chart-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
         <div>
           <div class="section-title" style="margin-bottom:2px">Implementación Global</div>
-          <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted)" id="pgImplSub">Módulos activos / 13 por propiedad</div>
+          <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted)" id="pgImplSub">Promedio por fase</div>
         </div>
         <div id="pgImplKpi" style="text-align:right"></div>
       </div>
-      <div class="chart-body" style="height:clamp(220px,20vw,300px);padding:8px 4px">
+      <div class="chart-body" style="height:clamp(220px,22vw,320px);padding:8px 4px">
         <canvas id="chartPgImpl"></canvas>
       </div>
     </div>
@@ -230,11 +219,11 @@
       <div class="chart-header" style="display:flex;justify-content:space-between;align-items:flex-start;flex-wrap:wrap;gap:8px">
         <div>
           <div class="section-title" style="margin-bottom:2px">Usabilidad Global</div>
-          <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted)" id="pgUsabSub">Módulos con uso real por módulo</div>
+          <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted)" id="pgUsabSub">% de propiedades con uso real por módulo</div>
         </div>
         <div id="pgUsabKpi" style="text-align:right"></div>
       </div>
-      <div class="chart-body" style="height:clamp(220px,20vw,300px);padding:8px 4px">
+      <div class="chart-body" style="height:clamp(220px,22vw,320px);padding:8px 4px">
         <canvas id="chartPgUsab"></canvas>
       </div>
     </div>

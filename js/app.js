@@ -541,8 +541,8 @@ async function deleteProp(id){
 function setPFilter(f,elem){progressFilter=f;document.querySelectorAll('#progressFilterTabs .filter-tab').forEach(t=>t.classList.remove('active'));elem.classList.add('active');renderPropertyProgressCards();renderModuleProgressChart();}
 function renderProgressSection(){renderGlobalProgress();renderPropertyProgressCards();renderModuleProgressChart();}
 function renderGlobalProgress(){
-  const props=state.properties,g=getGlobalProgress();
-  $('pgValue').textContent=g+'%';$('pgPct').textContent=g+'%';$('pgFill').style.width=g+'%';$('pgRingCenter').textContent=g+'%';
+  const props=state.properties;
+  const g=getGlobalProgress();
 
   // ── Usabilidad global ──
   let totalActiveMods=0,totalWithUsage=0;
@@ -555,80 +555,97 @@ function renderGlobalProgress(){
   const usabGlobal=totalActiveMods>0?Math.round((totalWithUsage/totalActiveMods)*100):0;
   const usabColor=usabGlobal>=80?'#00b460':usabGlobal>=50?'#e67e00':'#820ad1';
   const implColor=g>=80?'#00b460':g>=50?'#e67e00':'#820ad1';
-  const totalMods=props.reduce((s,p)=>s+(p.modules||[]).length,0);
-  $('pgSub').textContent=props.length+' propiedades · '+totalMods+' módulos activos';
 
-  // ── KPI headers de las cards ──
+  // ── KPI headers ──
   const implOnTarget=props.filter(p=>getPropProgress(p)>=80).length;
-  if($('pgImplKpi')) $('pgImplKpi').innerHTML=`<div style="font-size:clamp(22px,2.2vw,30px);font-weight:800;color:${implColor};line-height:1">${g}%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${implOnTarget}/${props.length} en meta</div>`;
-  if($('pgUsabKpi')) $('pgUsabKpi').innerHTML=`<div style="font-size:clamp(22px,2.2vw,30px);font-weight:800;color:${usabColor};line-height:1">${usabGlobal}%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${totalWithUsage}/${totalActiveMods} en uso</div>`;
-  if($('pgImplSub')) $('pgImplSub').textContent=`Promedio: ${g}% · ${implOnTarget}/${props.length} propiedades en meta (≥80%)`;
+  if($('pgImplKpi')) $('pgImplKpi').innerHTML=`<div style="font-size:clamp(24px,2.4vw,34px);font-weight:800;color:${implColor};line-height:1">${g}%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${implOnTarget}/${props.length} en meta</div>`;
+  if($('pgUsabKpi')) $('pgUsabKpi').innerHTML=`<div style="font-size:clamp(24px,2.4vw,34px);font-weight:800;color:${usabColor};line-height:1">${usabGlobal}%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${totalWithUsage}/${totalActiveMods} en uso</div>`;
+  if($('pgImplSub')) $('pgImplSub').textContent=`${implOnTarget}/${props.length} propiedades en meta (≥80%) · promedio por fase`;
   if($('pgUsabSub')) $('pgUsabSub').textContent=`${totalWithUsage} de ${totalActiveMods} módulos activos con uso real`;
 
-  const dk=theme==='dark';
-  const tc=dk?'#9287b8':'#7c6fa0';
-
-  // ── Gráfico 1: Barras horizontales — Implementación por propiedad ──
+  // ── Gráficas (diferidas 50ms para canvas visible) ──
   destroyChart('chartPgImpl');
   destroyChart('chartPgUsab');
   setTimeout(()=>{
-    const dk2=theme==='dark';
-    const tc2=dk2?'#9287b8':'#7c6fa0';
+    const dk=theme==='dark';
+    const tc=dk?'#9287b8':'#7c6fa0';
+    const gridC=dk?'rgba(255,255,255,.07)':'rgba(0,0,0,.06)';
+
+    // Chart 1: Barras horizontales — % implementación promedio por FASE
     if($('chartPgImpl')&&props.length){
-      const sorted=[...props].sort((a,b)=>getPropProgress(b)-getPropProgress(a));
-      const labels=sorted.map(p=>p.name.length>18?p.name.substring(0,18)+'…':p.name);
-      const vals=sorted.map(p=>getPropProgress(p));
-      const colors=vals.map(v=>v>=80?'#00b460':v>=50?'rgba(230,126,0,.85)':'rgba(130,10,209,.85)');
+      const phaseKeys=['fase0','fase1','fase2','fase3'];
+      const phaseLabels=['Fase 0','Fase 1','Fase 2','Fase 3'];
+      const phaseColors=['#0ea5e9','#820ad1','#e67e00','#00b460'];
+      const phaseVals=phaseKeys.map(k=>{
+        const arr=props.filter(p=>p.phase===k);
+        return arr.length?Math.round(arr.reduce((s,p)=>s+getPropProgress(p),0)/arr.length):0;
+      });
+      const phaseCounts=phaseKeys.map(k=>props.filter(p=>p.phase===k).length);
       charts['chartPgImpl']=new Chart($('chartPgImpl').getContext('2d'),{
         type:'bar',
-        data:{labels,datasets:[{label:'Implementación (%)',data:vals,backgroundColor:colors,borderRadius:6,borderSkipped:false,barThickness:16}]},
+        data:{
+          labels:phaseLabels.map((l,i)=>`${l} (${phaseCounts[i]})`),
+          datasets:[{
+            label:'Implementación promedio',
+            data:phaseVals,
+            backgroundColor:phaseColors.map(c=>c+'bb'),
+            borderColor:phaseColors,
+            borderWidth:2,
+            borderRadius:10,
+            barThickness:36
+          }]
+        },
         options:{
           indexAxis:'y',responsive:true,maintainAspectRatio:false,
-          plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw}%`}}},
+          plugins:{legend:{display:false},tooltip:{callbacks:{label:ctx=>`${ctx.raw}% promedio`}}},
           scales:{
-            x:{max:100,ticks:{color:tc2,font:{family:'Montserrat',size:10},callback:v=>v+'%'},grid:{color:dk2?'rgba(255,255,255,.06)':'rgba(0,0,0,.05)'},border:{display:false}},
-            y:{ticks:{color:tc2,font:{family:'Montserrat',size:10}},grid:{display:false},border:{display:false}}
+            x:{max:100,ticks:{color:tc,font:{family:'Montserrat',size:10},callback:v=>v+'%'},grid:{color:gridC},border:{display:false}},
+            y:{ticks:{color:tc,font:{family:'Montserrat',size:11,weight:'600'}},grid:{display:false},border:{display:false}}
           }
         }
       });
     }
+
+    // Chart 2: Polar Area — % de propiedades con uso real POR MÓDULO
     if($('chartPgUsab')&&props.length){
-      const useMods=USE_MODULES;
-      const labels=useMods.map(m=>m.icon+' '+m.label.substring(0,10));
-      const withUsage=useMods.map(m=>props.filter(p=>(p.modules||[]).includes(m.id)&&((p.module_values||{})[m.id]||0)>0).length);
-      const withMod=useMods.map(m=>props.filter(p=>(p.modules||[]).includes(m.id)).length);
+      const total=props.length;
+      const modLabels=USE_MODULES.map(m=>m.icon+' '+m.label);
+      const modVals=USE_MODULES.map(m=>
+        Math.round((props.filter(p=>(p.modules||[]).includes(m.id)&&((p.module_values||{})[m.id]||0)>0).length/total)*100)
+      );
+      const palette=[
+        'rgba(130,10,209,.6)','rgba(14,165,233,.6)','rgba(0,180,100,.6)',
+        'rgba(230,126,0,.6)','rgba(247,181,0,.6)','rgba(163,77,222,.6)',
+        'rgba(0,204,170,.6)','rgba(255,107,107,.6)','rgba(88,130,255,.6)',
+        'rgba(255,175,80,.6)','rgba(50,210,150,.6)','rgba(200,80,200,.6)',
+        'rgba(80,200,240,.6)'
+      ];
       charts['chartPgUsab']=new Chart($('chartPgUsab').getContext('2d'),{
-        type:'bar',
+        type:'polarArea',
         data:{
-          labels,
-          datasets:[
-            {label:'Con uso real',data:withUsage,backgroundColor:'rgba(0,180,100,.75)',borderRadius:6,borderSkipped:false,barThickness:14},
-            {label:'Sin uso aún',data:withMod.map((v,i)=>Math.max(0,v-withUsage[i])),backgroundColor:'rgba(130,10,209,.2)',borderRadius:6,borderSkipped:false,barThickness:14}
-          ]
+          labels:modLabels,
+          datasets:[{
+            data:modVals,
+            backgroundColor:palette,
+            borderColor:palette.map(c=>c.replace('.6)','.9)')),
+            borderWidth:1.5
+          }]
         },
         options:{
           responsive:true,maintainAspectRatio:false,
-          plugins:{legend:{position:'bottom',labels:{color:tc2,font:{family:'Montserrat',size:10},boxWidth:10}},tooltip:{callbacks:{label:ctx=>`${ctx.dataset.label}: ${ctx.raw} props`}}},
+          plugins:{
+            legend:{position:'bottom',labels:{color:tc,font:{family:'Montserrat',size:9},boxWidth:10,padding:8}},
+            tooltip:{callbacks:{label:ctx=>`${ctx.label}: ${ctx.raw}% de propiedades`}}
+          },
           scales:{
-            x:{stacked:true,ticks:{color:tc2,font:{family:'Montserrat',size:9}},grid:{display:false},border:{display:false}},
-            y:{stacked:true,ticks:{color:tc2,font:{family:'Montserrat',size:10},stepSize:1},grid:{color:dk2?'rgba(255,255,255,.06)':'rgba(0,0,0,.05)'},border:{display:false}}
+            r:{ticks:{display:false,backdropColor:'transparent'},grid:{color:gridC},angleLines:{color:gridC}}
           }
         }
       });
     }
-  }, 50);
-
-  $('pgStats').innerHTML=Object.entries(PHASES).map(([k,cfg])=>{
-    const arr=props.filter(p=>p.phase===k);
-    const avg=arr.length?Math.round(arr.reduce((s,p)=>s+getPropProgress(p),0)/arr.length):0;
-    return `<div class="pg-stat"><div class="pg-stat-val" style="color:${cfg.color}">${avg}%</div><div class="pg-stat-label">${cfg.label} (${arr.length})</div></div>`;
-  }).join('');
-  const canvas=$('pgRing'),ctx=canvas.getContext('2d');
-  canvas.width=140;canvas.height=140;ctx.clearRect(0,0,140,140);
-  const cx=70,cy=70,r=54,lw=12;
-  ctx.beginPath();ctx.arc(cx,cy,r,0,Math.PI*2);ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=lw;ctx.stroke();
-  if(g>0){ctx.beginPath();ctx.arc(cx,cy,r,-Math.PI/2,-Math.PI/2+(g/100)*Math.PI*2);ctx.strokeStyle='#F7B500';ctx.lineWidth=lw;ctx.lineCap='round';ctx.stroke();}
+  },50);
 }
+
 function renderPropertyProgressCards(){
   const sortVal=$('progressSort')?$('progressSort').value:'pct_desc';
   let props=[...state.properties];
