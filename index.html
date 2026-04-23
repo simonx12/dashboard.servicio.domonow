@@ -29,7 +29,13 @@
   <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com">
   <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&family=Syne:wght@700;800&display=swap" rel="stylesheet">
+
+  <!-- Preload recursos críticos -->
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js" as="script" crossorigin>
+  <link rel="preload" href="css/base.css" as="style">
+  <link rel="preload" href="js/app.js" as="script">
 
   <!-- Styles -->
   <link rel="stylesheet" href="css/base.css">
@@ -1212,7 +1218,7 @@
 </div>
 
   <!-- Scripts -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js" fetchpriority="high"></script>
   <script src="config.js"></script>
   <!-- Fallback: si config.js no existe en el deploy (está en .gitignore),
        este bloque provee las credenciales. En local, config.js ya definió

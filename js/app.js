@@ -210,15 +210,57 @@ function skeletonChart() { return '<div class="skeleton skeleton-chart"></div>';
 
 // ══════ DEMO DATA ══════
 function useDemoData(){ showToast('Modo demo desactivado. Conecta a Supabase.','error'); }
+
+// ══════════════════════════════════════════════
+//  ★ PERFORMANCE UTILITIES
+// ══════════════════════════════════════════════
+
+// ── 1. Memoización de getPropProgress ──
+// La caché se invalida en cada fetchAllData (datos nuevos).
+const _progCache = new Map();
+function invalidateCache() { _progCache.clear(); }
+
 function getPropProgress(p){
-  // Implementación = módulos activos de uso / 13 módulos totales de uso
-  const TOTAL_MODULES = USE_MODULES.length; // 13
-  const activeMods = (p.modules||[]).filter(mid=>!NON_MODULES.includes(mid));
-  return Math.round((activeMods.length / TOTAL_MODULES) * 100);
+  const key = p.id + '_' + (p.modules||[]).length;
+  if (!_progCache.has(key)) {
+    const activeMods = (p.modules||[]).filter(mid=>!NON_MODULES.includes(mid));
+    _progCache.set(key, Math.round((activeMods.length / USE_MODULES.length) * 100));
+  }
+  return _progCache.get(key);
 }
-function getGlobalProgress(){if(!state.properties.length)return 0;return Math.round(state.properties.reduce((s,p)=>s+getPropProgress(p),0)/state.properties.length);}
+function getGlobalProgress(){
+  if(!state.properties.length)return 0;
+  return Math.round(state.properties.reduce((s,p)=>s+getPropProgress(p),0)/state.properties.length);
+}
 function pctColor(pct){return pct>=80?'#00b460':pct>=50?'#e67e00':'#820ad1';}
 function pctBadgeClass(pct){return pct>=80?'c-green':pct>=50?'c-orange':'c-purple';}
+
+// ── 2. Debounce ──
+function debounce(fn, ms=200){
+  let t; return (...a)=>{ clearTimeout(t); t=setTimeout(()=>fn(...a), ms); };
+}
+
+// ── 3. Render guard — evita re-render del mismo sección sin datos nuevos ──
+const _renderGuard = { section: null, dataKey: null };
+function _dataKey() { return state.properties.length+'_'+(state.lastUpdated?.getTime()||0); }
+function _guardOk(id) {
+  const dk = _dataKey();
+  if(_renderGuard.section===id && _renderGuard.dataKey===dk) return false; // skip
+  _renderGuard.section=id; _renderGuard.dataKey=dk; return true;
+}
+
+// ── 4. Fade-in helper para contenido que reemplaza skeletons ──
+function _fadeIn(el){
+  if(!el) return;
+  el.classList.remove('content-loaded');
+  // fuerza reflow para reiniciar la animación
+  void el.offsetWidth;
+  el.classList.add('content-loaded');
+}
+
+// ── 5. Debounced search ──
+const _debouncedFilter = debounce(()=>renderPropertiesTable(), 220);
+function filterProperties(){ searchQuery=$('propSearch').value; _debouncedFilter(); }
 
 // ══════ HELPERS ══════
 
@@ -251,38 +293,54 @@ function initSidebarState(){
 }
 
 // ══════ NAVIGATION ══════
+const SECTION_TITLES = {
+  strategy:           'Vista de <span style="color:var(--domo)">Estrategia — Abismo</span>',
+  tasks:              'Gestión de <span style="color:var(--domo)">Tareas por Propiedad</span>',
+  'abismo-propiedad': 'Abismo <span style="color:var(--domo)">Por Propiedad</span>',
+  'abismo-porpropiedad':'Abismo <span style="color:var(--domo)">Por Propiedad</span>',
+  lineal:             'Avance <span style="color:var(--domo)">Lineal por Semana</span>',
+  _default:           'Panel de <span style="color:var(--domo)">Implementación</span>'
+};
+
 function goSection(id){
+  // Ocultar todas las secciones en lote
   document.querySelectorAll('[id^="sec-"]').forEach(s=>s.style.display='none');
   $('sec-'+id).style.display='block';
   document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
   const nav=document.querySelector(`.nav-item[data-sec="${id}"]`);
   if(nav)nav.classList.add('active');
   currentSection=id;
-  const titleEl=$('topbarTitle');
-  if(id==='strategy'){titleEl.innerHTML='Vista de <span style="color:var(--domo)">Estrategia — Abismo</span>';strategyView='overview';}
-  if(id==='tasks'){titleEl.innerHTML='Gestión de <span style="color:var(--domo)">Tareas por Propiedad</span>';}
-  if(id==='abismo-propiedad'){titleEl.innerHTML='Abismo <span style="color:var(--domo)">Por Propiedad</span>';strategyView='cards';}
-
-  if(id==='abismo-porpropiedad'){titleEl.innerHTML='Abismo <span style="color:var(--domo)">Por Propiedad</span>';strategyView='prop';}
-  if(id==='lineal'){titleEl.innerHTML='Avance <span style="color:var(--domo)">Lineal por Semana</span>';}
-  else{titleEl.innerHTML='Panel de <span style="color:var(--domo)">Implementación</span>';}
+  $('topbarTitle').innerHTML = SECTION_TITLES[id] || SECTION_TITLES._default;
+  if(id==='strategy')   strategyView='overview';
+  if(id==='abismo-propiedad') strategyView='cards';
+  if(id==='abismo-porpropiedad') strategyView='prop';
   renderSection(id);
 }
-function showSection(id){if(!isConnected){showToast('Conecta primero o usa Demo','error');return;}goSection(id);}
-function goConnect(){document.querySelectorAll('[id^="sec-"]').forEach(s=>s.style.display='none');$('sec-connect').style.display='block';document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));currentSection='connect';}
-function renderSection(id){
-  if(id==='dashboard'){renderKPIs();renderPhases();renderDashCharts();}
-  if(id==='properties')renderPropertiesTable();
-  if(id==='modules')renderModulesSection();
-  if(id==='progress')renderProgressSection();
-  if(id==='charts')renderChartsPage();
-  if(id==='settings'){renderSettings();updateLocalDataInfo();renderWeekCompare();}
-  if(id==='strategy')renderStrategySection();
-  if(id==='tasks')renderTasksSection();
-  if(id==='abismo-propiedad'){strategyView='cards';renderStrategyFromNav('cards');}
+function showSection(id){if(!isConnected){showToast('Conecta primero','error');return;}goSection(id);}
+function goConnect(){
+  document.querySelectorAll('[id^="sec-"]').forEach(s=>s.style.display='none');
+  $('sec-connect').style.display='block';
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.remove('active'));
+  currentSection='connect';
+}
 
-  if(id==='abismo-porpropiedad'){strategyView='prop';renderStrategyFromNav('prop');}
-  if(id==='lineal'){renderLinealSection();}
+function renderSection(id){
+  // Guard: no re-renderizar si la sección y los datos no cambiaron
+  // (excepto estrategia y tasks que tienen estado propio)
+  const noGuard = ['strategy','tasks','abismo-propiedad','abismo-porpropiedad','settings'];
+  if(!noGuard.includes(id) && !_guardOk(id)) return;
+
+  if(id==='dashboard'){renderKPIs();renderPhases();renderDashCharts();}
+  else if(id==='properties')renderPropertiesTable();
+  else if(id==='modules')renderModulesSection();
+  else if(id==='progress')renderProgressSection();
+  else if(id==='charts')renderChartsPage();
+  else if(id==='settings'){renderSettings();updateLocalDataInfo();renderWeekCompare();}
+  else if(id==='strategy')renderStrategySection();
+  else if(id==='tasks')renderTasksSection();
+  else if(id==='abismo-propiedad'){strategyView='cards';renderStrategyFromNav('cards');}
+  else if(id==='abismo-porpropiedad'){strategyView='prop';renderStrategyFromNav('prop');}
+  else if(id==='lineal')renderLinealSection();
 }
 
 // ══════ SUPABASE ══════
@@ -392,6 +450,10 @@ async function fetchAllData(){
     if(error)throw error;
     state.properties=(props||[]).map(p=>({id:p.id,name:p.name||'',city:p.city||'',phase:p.phase||'fase0',days:p.days_elapsed||0,units:p.units||0,modules:Array.isArray(p.active_modules)?p.active_modules:[],module_values:(p.module_values&&typeof p.module_values==='object')?p.module_values:{},notes:p.notes||'',entry_date:p.entry_date||''}));
     state.lastUpdated=new Date();
+    // ★ Invalidar caché de progreso (datos nuevos)
+    invalidateCache();
+    // ★ Invalidar render guard para forzar re-render con datos frescos
+    _renderGuard.dataKey = null;
     await loadTasksFromSupabase();
     if(currentSection!=='connect')renderSection(currentSection);
   }catch(e){showToast('Error al cargar datos','error');}
@@ -496,18 +558,19 @@ function getFilteredProps(){
   if(searchQuery){const q=searchQuery.toLowerCase();list=list.filter(p=>p.name.toLowerCase().includes(q)||(p.city||'').toLowerCase().includes(q));}
   return list;
 }
-function filterProperties(){searchQuery=$('propSearch').value;renderPropertiesTable();}
 function setFilter(f,e){activeFilter=f;document.querySelectorAll('#sec-properties .filter-tab').forEach(t=>t.classList.remove('active'));e.classList.add('active');renderPropertiesTable();}
 
 function renderPropertiesTable(){
   const tbody=$('propsBody'),list=getFilteredProps();
   if(!list.length){tbody.innerHTML=`<tr><td colspan="8"><div class="empty-state">📭 Sin propiedades. ¡Agrega la primera!</div></td></tr>`;return;}
-  tbody.innerHTML=list.map(p=>{
+  const html=list.map(p=>{
     const cfg=PHASES[p.phase]||PHASES.fase1;
     const overall=getPropProgress(p);
     const clr=pctColor(overall);
-    return `<tr><td><strong>${p.name}</strong>${p.entry_date?`<div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted)">📅 ${p.entry_date}</span><button style="font-size:9px;padding:1px 6px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:'Montserrat',sans-serif" onclick="openQuickDateEdit('${p.id}','${p.entry_date}')">✏️</button></div>`:''}</td><td>${p.city||'—'}</td><td><span class="pill ${cfg.pill}">${cfg.label}</span></td><td style="font-family:JetBrains Mono,monospace">${p.units||0}</td><td><strong>${(p.modules||[]).length}</strong>/${MODULES.length}</td><td style="font-family:JetBrains Mono,monospace">${p.days||0}</td><td><div class="bar-cell"><div class="mini-bar"><div class="mini-fill" style="width:${overall}%;background:${clr}"></div></div><span class="pct-label" style="color:${clr}">${overall}%</span></div></td><td><div class="actions-cell"><button class="btn-edit" onclick="openEditModal('${p.id}')">✏️ Editar</button><button class="btn-del" onclick="deleteProp('${p.id}')">🗑️</button></div></td></tr>`;
+    return `<tr><td><strong>${p.name}</strong>${p.entry_date?`<div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted)">📅 ${p.entry_date}</span><button style="font-size:9px;padding:1px 6px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:'Montserrat',sans-serif" onclick="openQuickDateEdit('${p.id}','${p.entry_date}')">&#9999;&#65039;</button></div>`:''}</td><td>${p.city||'—'}</td><td><span class="pill ${cfg.pill}">${cfg.label}</span></td><td style="font-family:JetBrains Mono,monospace">${p.units||0}</td><td><strong>${(p.modules||[]).length}</strong>/${MODULES.length}</td><td style="font-family:JetBrains Mono,monospace">${p.days||0}</td><td><div class="bar-cell"><div class="mini-bar"><div class="mini-fill" style="width:${overall}%;background:${clr}"></div></div><span class="pct-label" style="color:${clr}">${overall}%</span></div></td><td><div class="actions-cell"><button class="btn-edit" onclick="openEditModal('${p.id}')">&#9999;&#65039; Editar</button><button class="btn-del" onclick="deleteProp('${p.id}')">&#128465;&#65039;</button></div></td></tr>`;
   }).join('');
+  tbody.innerHTML = html;
+  _fadeIn(tbody);
 }
 
 function renderModulesSection(){renderModuleMeters();renderModulesTable();renderModuleCharts();$('modTableUpdated').textContent=new Date().toLocaleTimeString();}
@@ -808,9 +871,11 @@ function renderPropertyProgressCards(){
   if(progressFilter!=='all')props=props.filter(p=>p.phase===progressFilter);
   props.sort((a,b)=>{if(sortVal==='pct_desc')return getPropProgress(b)-getPropProgress(a);if(sortVal==='pct_asc')return getPropProgress(a)-getPropProgress(b);if(sortVal==='name')return a.name.localeCompare(b.name);if(sortVal==='phase'){const o={fase0:0,fase1:1,fase2:2,fase3:3};return(o[a.phase]||0)-(o[b.phase]||0);}return 0;});
   if(!props.length){$('propProgressGrid').innerHTML=`<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-muted);font-size:13px">📭 Sin propiedades en esta fase.</div>`;return;}
-  // ★ Skeleton mientras renderiza
-  $('propProgressGrid').innerHTML=Array.from({length:Math.min(props.length,4)},()=>skeletonProgressCard()).join('');
+  // ★ Skeleton mientras renderiza (con fade-in al reemplazar)
+  const _ppg=$('propProgressGrid');
+  _ppg.innerHTML=Array.from({length:Math.min(props.length,4)},()=>skeletonProgressCard()).join('');
   setTimeout(()=>{
+    _ppg.classList.remove('content-loaded');
     $('propProgressGrid').innerHTML=props.map(p=>{
     const cfg=PHASES[p.phase]||PHASES.fase1;
     const mv=p.module_values||{};const units=p.units||50;
@@ -840,7 +905,8 @@ function renderPropertyProgressCards(){
       </div>
     </div>`;
     return `<div class="pp-card"><div class="pp-header"><div><div class="pp-name">${p.name}</div><div class="pp-city">📍 ${p.city||'—'} · ${units} unid.</div>${p.entry_date?`<div style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted);margin-top:2px">📅 ${p.entry_date}</div>`:''}</div><div style="text-align:right"><span class="pill ${cfg.pill}">${cfg.label}</span></div></div><div class="pp-body">${metricsRow}${activeMods.length?`<div style="font-size:clamp(8px,.8vw,10px);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Módulos activos (${activeMods.length}/${USE_MODULES.length})</div><div class="pp-mod-list">${modRows}</div>`:`<div style="font-size:clamp(10px,.9vw,12px);color:var(--text-muted);padding:10px 0;text-align:center">Sin módulos activos</div>`}${inactiveMods.length?`<div style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted);margin-top:8px">Pendientes: ${inactiveMods.map(m=>m.icon+' '+m.label).join(', ')}</div>`:''}</div><div class="pp-footer"><div class="pp-days">⏱ Sem. ${getPropWeek(p)}/8 · ${getDaysFromEntry(p)} días</div><button class="pp-edit-btn" onclick="openEditModal('${p.id}')">✏️ Editar</button></div></div>`;
-  }).join('');
+    }).join('');
+    _fadeIn(_ppg);
   },30);
 }
 

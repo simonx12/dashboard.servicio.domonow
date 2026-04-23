@@ -1,23 +1,39 @@
 /* ══════════════════════════════════════════════
-   SKELETON LOADERS
-   Shimmer animation for loading states.
+   SKELETON LOADERS — GPU-optimized
+   Pseudo-elemento + transform:translateX
+   (composited layer, cero repaint)
    ══════════════════════════════════════════════ */
 
 @keyframes shimmer {
-  0%   { background-position: -400px 0; }
-  100% { background-position:  400px 0; }
+  0%   { transform: translateX(-100%); }
+  100% { transform: translateX( 100%); }
 }
 
+@keyframes fadeInContent {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: translateY(0);   }
+}
+
+/* ── Base skeleton ── */
 .skeleton {
-  background: linear-gradient(
-    90deg,
-    var(--surface2) 25%,
-    var(--border)   50%,
-    var(--surface2) 75%
-  );
-  background-size: 800px 100%;
-  animation: shimmer 1.4s infinite linear;
+  position: relative;
+  overflow: hidden;
+  background: var(--surface2);
   border-radius: 8px;
+  contain: layout;
+}
+.skeleton::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent 0%, var(--sk-shine, rgba(255,255,255,.10)) 50%, transparent 100%);
+  animation: shimmer 1.4s ease-in-out infinite;
+  will-change: transform;
+}
+
+[data-theme="dark"] .skeleton {
+  background: rgba(255,255,255,.04);
+  --sk-shine: rgba(255,255,255,.08);
 }
 
 /* ── KPI card skeleton ── */
@@ -29,15 +45,16 @@
   display: flex;
   flex-direction: column;
   gap: 10px;
+  contain: layout style;
 }
-.skeleton-kpi-label  { height: 10px; width: 60%;  }
-.skeleton-kpi-value  { height: 32px; width: 45%;  }
-.skeleton-kpi-sub    { height: 9px;  width: 75%;  }
+.skeleton-kpi-label { height: 10px; width: 58%; }
+.skeleton-kpi-value { height: 30px; width: 42%; border-radius: 6px; }
+.skeleton-kpi-sub   { height:  9px; width: 72%; }
 
-/* ── Table cell skeleton ── */
-.skeleton-cell { height: 14px; width: 80%; margin: 4px 0; }
+/* ── Table cell ── */
+.skeleton-cell { height: 14px; width: 80%; margin: 3px 0; }
 
-/* ── Progress card skeleton ── */
+/* ── Progress card ── */
 .skeleton-progress-card {
   background: var(--surface);
   border: 1px solid var(--border);
@@ -46,33 +63,15 @@
   display: flex;
   flex-direction: column;
   gap: 12px;
+  contain: layout style;
 }
-.skeleton-card-title { height: 16px; width: 55%; }
-.skeleton-card-sub   { height: 10px; width: 40%; }
-.skeleton-card-bar   { height: 8px;  width: 100%; border-radius: 4px; }
+.skeleton-card-title { height: 16px; width: 52%; }
+.skeleton-card-sub   { height: 10px; width: 38%; }
+.skeleton-card-bar   { height:  8px; width: 100%; border-radius: 4px; }
 .skeleton-card-mods  { height: 80px; width: 100%; border-radius: 10px; }
 
-/* ── Chart skeleton ── */
-.skeleton-chart {
-  width: 100%;
-  height: 100%;
-  min-height: 200px;
-  border-radius: 12px;
-}
+/* ── Chart ── */
+.skeleton-chart { width: 100%; height: 100%; min-height: 200px; border-radius: 12px; }
 
-/* ── Dark mode adjustments ── */
-[data-theme="dark"] .skeleton {
-  background: linear-gradient(
-    90deg,
-    rgba(255,255,255,.04) 25%,
-    rgba(255,255,255,.09) 50%,
-    rgba(255,255,255,.04) 75%
-  );
-  background-size: 800px 100%;
-  animation: shimmer 1.4s infinite linear;
-}
-
-[data-theme="dark"] .skeleton-kpi-card,
-[data-theme="dark"] .skeleton-progress-card {
-  background: var(--surface);
-}
+/* ── Fade-in cuando el skeleton es reemplazado ── */
+.content-loaded { animation: fadeInContent .25s ease-out both; }
