@@ -127,6 +127,34 @@ function pctBadgeClass(pct){return pct>=80?'c-green':pct>=50?'c-orange':'c-purpl
 // ══════ DEMO DATA ══════
 function useDemoData(){ showToast('Modo demo desactivado. Conecta a Supabase.','error'); }
 
+// ══════ SIDEBAR COLAPSABLE ══════
+function toggleSidebar(){
+  const sb=$('sidebar'),tb=$('topbar'),mn=document.querySelector('.main');
+  const collapsed=sb.classList.toggle('collapsed');
+  tb.classList.toggle('collapsed',collapsed);
+  mn.classList.toggle('collapsed',collapsed);
+  localStorage.setItem('dn_sidebar_collapsed',collapsed?'1':'0');
+}
+function openMobileSidebar(){
+  $('sidebar').classList.add('mobile-open');
+  $('sidebarOverlay').classList.add('active');
+  document.body.style.overflow='hidden';
+}
+function closeMobileSidebar(){
+  $('sidebar').classList.remove('mobile-open');
+  $('sidebarOverlay').classList.remove('active');
+  document.body.style.overflow='';
+}
+function initSidebarState(){
+  const collapsed=localStorage.getItem('dn_sidebar_collapsed')==='1';
+  if(collapsed){
+    const sb=$('sidebar'),tb=$('topbar'),mn=document.querySelector('.main');
+    if(sb)sb.classList.add('collapsed');
+    if(tb)tb.classList.add('collapsed');
+    if(mn)mn.classList.add('collapsed');
+  }
+}
+
 // ══════ NAVIGATION ══════
 function goSection(id){
   document.querySelectorAll('[id^="sec-"]').forEach(s=>s.style.display='none');
@@ -1786,6 +1814,7 @@ function showToast(msg,type=''){const c=$('toastContainer'),e=document.createEle
 // ══════ INIT ══════
 document.addEventListener('DOMContentLoaded',async()=>{
   loadSettings();document.body.dataset.theme=theme;$('themeBtn').textContent=theme==='dark'?'☀️':'🌙';
+  initSidebarState();
   updateGreeting();setInterval(updateClock,1000);updateClock();autoSetDates();
 
   // Lee credenciales desde config.js (excluido de git)
