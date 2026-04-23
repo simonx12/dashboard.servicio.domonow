@@ -88,6 +88,7 @@ export async function fetchAllData() {
       modules:      Array.isArray(p.active_modules) ? p.active_modules : [],
       module_values:(p.module_values && typeof p.module_values === 'object') ? p.module_values : {},
       notes:        p.notes         || '',
+      core_notes:   p.core_notes    || '',
       entry_date:   p.entry_date    || ''
     }));
     state.lastUpdated = new Date();
@@ -103,7 +104,8 @@ export async function insertSupabase(prop) {
     name: prop.name, city: prop.city, phase: prop.phase,
     days_elapsed: prop.days, units: prop.units,
     active_modules: prop.modules, module_values: prop.module_values,
-    notes: prop.notes, entry_date: new Date(prop.entry_date).toISOString()
+    notes: prop.notes, core_notes: prop.core_notes,
+    entry_date: new Date(prop.entry_date).toISOString()
   });
   if (error) showToast('Error: ' + error.message, 'error');
 }
@@ -115,7 +117,7 @@ export async function updateSupabase(id, prop) {
     name: prop.name, city: prop.city, phase: prop.phase,
     days_elapsed: prop.days, units: prop.units,
     active_modules: prop.modules, module_values: prop.module_values,
-    notes: prop.notes, ...(edDate ? { entry_date: edDate } : {})
+    notes: prop.notes, core_notes: prop.core_notes, ...(edDate ? { entry_date: edDate } : {})
   }).eq('id', id);
   if (error) showToast('Error: ' + error.message, 'error');
 }

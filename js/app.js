@@ -448,7 +448,7 @@ async function fetchAllData(){
   try{
     const{data:props,error}=await sb.from('properties').select('*').order('created_at',{ascending:false});
     if(error)throw error;
-    state.properties=(props||[]).map(p=>({id:p.id,name:p.name||'',city:p.city||'',phase:p.phase||'fase0',days:p.days_elapsed||0,units:p.units||0,modules:Array.isArray(p.active_modules)?p.active_modules:[],module_values:(p.module_values&&typeof p.module_values==='object')?p.module_values:{},notes:p.notes||'',entry_date:p.entry_date||''}));
+    state.properties=(props||[]).map(p=>({id:p.id,name:p.name||'',city:p.city||'',phase:p.phase||'fase0',days:p.days_elapsed||0,units:p.units||0,modules:Array.isArray(p.active_modules)?p.active_modules:[],module_values:(p.module_values&&typeof p.module_values==='object')?p.module_values:{},notes:p.notes||'',core_notes:p.core_notes||'',entry_date:p.entry_date||''}));
     state.lastUpdated=new Date();
     // ★ Invalidar caché de progreso (datos nuevos)
     invalidateCache();
@@ -459,8 +459,8 @@ async function fetchAllData(){
   }catch(e){showToast('Error al cargar datos','error');}
 }
 
-async function insertSupabase(prop){if(!sb)return;const{error}=await sb.from('properties').insert({name:prop.name,city:prop.city,phase:prop.phase,days_elapsed:prop.days,units:prop.units,active_modules:prop.modules,module_values:prop.module_values,notes:prop.notes,entry_date:new Date(prop.entry_date).toISOString()});if(error)showToast('Error: '+error.message,'error');}
-async function updateSupabase(id,prop){if(!sb)return;const edDate=prop.entry_date?new Date(prop.entry_date).toISOString():null;const{error}=await sb.from('properties').update({name:prop.name,city:prop.city,phase:prop.phase,days_elapsed:prop.days,units:prop.units,active_modules:prop.modules,module_values:prop.module_values,notes:prop.notes,...(edDate?{entry_date:edDate}:{})}).eq('id',id);if(error)showToast('Error: '+error.message,'error');}
+async function insertSupabase(prop){if(!sb)return;const{error}=await sb.from('properties').insert({name:prop.name,city:prop.city,phase:prop.phase,days_elapsed:prop.days,units:prop.units,active_modules:prop.modules,module_values:prop.module_values,notes:prop.notes,core_notes:prop.core_notes,entry_date:new Date(prop.entry_date).toISOString()});if(error)showToast('Error: '+error.message,'error');}
+async function updateSupabase(id,prop){if(!sb)return;const edDate=prop.entry_date?new Date(prop.entry_date).toISOString():null;const{error}=await sb.from('properties').update({name:prop.name,city:prop.city,phase:prop.phase,days_elapsed:prop.days,units:prop.units,active_modules:prop.modules,module_values:prop.module_values,notes:prop.notes,core_notes:prop.core_notes,...(edDate?{entry_date:edDate}:{})}).eq('id',id);if(error)showToast('Error: '+error.message,'error');}
 async function deleteSupabase(id){if(!sb)return;const{error}=await sb.from('properties').delete().eq('id',id);if(error)showToast('Error: '+error.message,'error');}
 
 function startRealtime(){if(!sb)return;sbChannel=sb.channel('dn-rt').on('postgres_changes',{event:'*',schema:'public',table:'properties'},()=>fetchAllData()).subscribe();}
@@ -567,7 +567,7 @@ function renderPropertiesTable(){
     const cfg=PHASES[p.phase]||PHASES.fase1;
     const overall=getPropProgress(p);
     const clr=pctColor(overall);
-    return `<tr><td><strong>${p.name}</strong>${p.entry_date?`<div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted)">📅 ${p.entry_date}</span><button style="font-size:9px;padding:1px 6px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:'Montserrat',sans-serif" onclick="openQuickDateEdit('${p.id}','${p.entry_date}')">&#9999;&#65039;</button></div>`:''}</td><td>${p.city||'—'}</td><td><span class="pill ${cfg.pill}">${cfg.label}</span></td><td style="font-family:JetBrains Mono,monospace">${p.units||0}</td><td><strong>${(p.modules||[]).length}</strong>/${MODULES.length}</td><td style="font-family:JetBrains Mono,monospace">${p.days||0}</td><td><div class="bar-cell"><div class="mini-bar"><div class="mini-fill" style="width:${overall}%;background:${clr}"></div></div><span class="pct-label" style="color:${clr}">${overall}%</span></div></td><td><div class="actions-cell"><button class="btn-edit" onclick="openEditModal('${p.id}')">&#9999;&#65039; Editar</button><button class="btn-del" onclick="deleteProp('${p.id}')">&#128465;&#65039;</button></div></td></tr>`;
+    return `<tr><td><strong>${p.name}</strong>${p.core_notes?`<span style="margin-left:6px;cursor:help;opacity:0.7" title="Core: ${p.core_notes.substring(0,60)}${p.core_notes.length>60?'...':''}">💡</span>`:''}${p.entry_date?`<div style="display:flex;align-items:center;gap:4px;margin-top:2px"><span style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted)">📅 ${p.entry_date}</span><button style="font-size:9px;padding:1px 6px;border-radius:5px;border:1px solid var(--border);background:transparent;color:var(--text-muted);cursor:pointer;font-family:'Montserrat',sans-serif" onclick="openQuickDateEdit('${p.id}','${p.entry_date}')">&#9999;&#65039;</button></div>`:''}</td><td>${p.city||'—'}</td><td><span class="pill ${cfg.pill}">${cfg.label}</span></td><td style="font-family:JetBrains Mono,monospace">${p.units||0}</td><td><strong>${(p.modules||[]).length}</strong>/${MODULES.length}</td><td style="font-family:JetBrains Mono,monospace">${p.days||0}</td><td><div class="bar-cell"><div class="mini-bar"><div class="mini-fill" style="width:${overall}%;background:${clr}"></div></div><span class="pct-label" style="color:${clr}">${overall}%</span></div></td><td><div class="actions-cell"><button class="btn-edit" onclick="openEditModal('${p.id}')">&#9999;&#65039; Editar</button><button class="btn-del" onclick="deleteProp('${p.id}')">&#128465;&#65039;</button></div></td></tr>`;
   }).join('');
   tbody.innerHTML = html;
   _fadeIn(tbody);
@@ -611,7 +611,7 @@ function renderModuleCharts(){
 function openAddModal(){
   $('modalTitle').textContent='Agregar Propiedad';$('editPropId').value='';
   $('fName').value='';$('fCity').value='';$('fPhase').value='fase0';
-  $('fDays').value='0';$('fUnits').value='50';$('fNotes').value='';
+  $('fDays').value='0';$('fUnits').value='50';$('fNotes').value='';$('fCoreNotes').value='';
   $('fEntryDate').value=new Date().toISOString().split('T')[0];
   // Auto-activate phase 1 modules
   setTimeout(()=>onPhaseChange(),0);
@@ -622,7 +622,7 @@ function openEditModal(id){
   $('modalTitle').textContent='Editar Propiedad';$('editPropId').value=id;
   $('fName').value=p.name||'';$('fCity').value=p.city||'';$('fPhase').value=p.phase||'fase0';
   $('fDays').value=p.days||0;$('fUnits').value=p.units||0;$('fEntryDate').value=p.entry_date||'';
-  autoCalcDays();$('fNotes').value=p.notes||'';
+  autoCalcDays();$('fNotes').value=p.notes||'';$('fCoreNotes').value=p.core_notes||'';
   // Use the property's existing modules & values (they were set for their phase)
   buildModuleChecks(p.modules||[],p.module_values||{});$('propModal').style.display='flex';
 }
@@ -728,7 +728,7 @@ async function saveProperty(){
     const existing=state.properties.find(x=>String(x.id)===String(editId));
     entryDate=(existing&&existing.entry_date)||'';
   }
-  const prop={name,city:$('fCity').value.trim(),phase:$('fPhase').value,days:parseInt($('fDays').value)||0,units:parseInt($('fUnits').value)||0,entry_date:entryDate,notes:$('fNotes').value.trim(),modules,module_values};
+  const prop={name,city:$('fCity').value.trim(),phase:$('fPhase').value,days:parseInt($('fDays').value)||0,units:parseInt($('fUnits').value)||0,entry_date:entryDate,notes:$('fNotes').value.trim(),core_notes:$('fCoreNotes').value.trim(),modules,module_values};
   closeModal();
   if(editId){
     if(sb){await updateSupabase(editId,prop);await fetchAllData();}
@@ -904,7 +904,7 @@ function renderPropertyProgressCards(){
         <div style="font-size:clamp(8px,.75vw,10px);color:var(--text-muted);margin-top:6px">${modsWithUsage}/${activeMods.length} módulos en uso</div>
       </div>
     </div>`;
-    return `<div class="pp-card"><div class="pp-header"><div><div class="pp-name">${p.name}</div><div class="pp-city">📍 ${p.city||'—'} · ${units} unid.</div>${p.entry_date?`<div style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted);margin-top:2px">📅 ${p.entry_date}</div>`:''}</div><div style="text-align:right"><span class="pill ${cfg.pill}">${cfg.label}</span></div></div><div class="pp-body">${metricsRow}${activeMods.length?`<div style="font-size:clamp(8px,.8vw,10px);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Módulos activos (${activeMods.length}/${USE_MODULES.length})</div><div class="pp-mod-list">${modRows}</div>`:`<div style="font-size:clamp(10px,.9vw,12px);color:var(--text-muted);padding:10px 0;text-align:center">Sin módulos activos</div>`}${inactiveMods.length?`<div style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted);margin-top:8px">Pendientes: ${inactiveMods.map(m=>m.icon+' '+m.label).join(', ')}</div>`:''}</div><div class="pp-footer"><div class="pp-days">⏱ Sem. ${getPropWeek(p)}/8 · ${getDaysFromEntry(p)} días</div><button class="pp-edit-btn" onclick="openEditModal('${p.id}')">✏️ Editar</button></div></div>`;
+    return `<div class="pp-card"><div class="pp-header"><div><div class="pp-name">${p.name}${p.core_notes?`<span style="margin-left:6px;cursor:help;font-size:12px;vertical-align:middle" title="Core: ${p.core_notes}">💡</span>`:''}</div><div class="pp-city">📍 ${p.city||'—'} · ${units} unid.</div>${p.entry_date?`<div style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted);margin-top:2px">📅 ${p.entry_date}</div>`:''}</div><div style="text-align:right"><span class="pill ${cfg.pill}">${cfg.label}</span></div></div><div class="pp-body">${metricsRow}${activeMods.length?`<div style="font-size:clamp(8px,.8vw,10px);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Módulos activos (${activeMods.length}/${USE_MODULES.length})</div><div class="pp-mod-list">${modRows}</div>`:`<div style="font-size:clamp(10px,.9vw,12px);color:var(--text-muted);padding:10px 0;text-align:center">Sin módulos activos</div>`}${inactiveMods.length?`<div style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted);margin-top:8px">Pendientes: ${inactiveMods.map(m=>m.icon+' '+m.label).join(', ')}</div>`:''}</div><div class="pp-footer"><div class="pp-days">⏱ Sem. ${getPropWeek(p)}/8 · ${getDaysFromEntry(p)} días</div><button class="pp-edit-btn" onclick="openEditModal('${p.id}')">✏️ Editar</button></div></div>`;
     }).join('');
     _fadeIn(_ppg);
   },30);
