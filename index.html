@@ -1135,6 +1135,17 @@
   <!-- Scripts -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
   <script src="config.js"></script>
+  <!-- Fallback: si config.js no existe en el deploy (está en .gitignore),
+       este bloque provee las credenciales. En local, config.js ya definió
+       SUPABASE_CONFIG y este if no lo sobreescribe. -->
+  <script>
+    if (typeof SUPABASE_CONFIG === 'undefined') {
+      var SUPABASE_CONFIG = {
+        url: 'https://dbtlyjaxqoezxbwvkimc.supabase.co',
+        key: 'sb_publishable_OOOitM2zGuo78KEO_K0Mug_3dkdh6z1'
+      };
+    }
+  </script>
   <script src="js/app.js" defer></script>
 </body>
 </html>
