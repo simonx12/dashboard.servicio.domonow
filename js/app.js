@@ -880,8 +880,9 @@ function renderPropertyProgressCards(){
     const cfg=PHASES[p.phase]||PHASES.fase1;
     const mv=p.module_values||{};const units=p.units||50;
     const overall=getPropProgress(p);const clr=pctColor(overall);
-    // Solo módulos reales (sin configuración ni capacitación)
+    // Todos los módulos activos
     const allActive=p.modules||[];
+    const coreActive=allActive.filter(mid=>NON_MODULES.includes(mid));
     const activeMods=allActive.filter(mid=>!NON_MODULES.includes(mid));
     const inactiveMods=USE_MODULES.filter(m=>!activeMods.includes(m.id));
     // Usabilidad: módulos activos que alcanzan su meta real de usabilidad
@@ -891,6 +892,10 @@ function renderPropertyProgressCards(){
     const modRows=USE_MODULES.filter(m=>activeMods.includes(m.id)).map(m=>{
       const val=mv[m.id]||0;const meta=m.metaFn(units);const pct=calcPct(m.id,val,units);const mc=pctColor(pct);
       return `<div class="pp-mod-row"><div class="pp-mod-icon">${m.icon}</div><div class="pp-mod-name">${m.label}</div><div class="pp-mod-num">${val}/${meta}</div><div class="pp-mod-pct" style="color:${mc}">${pct}%</div></div><div class="pp-mod-bar-wrap"><div class="pp-mod-fill" style="width:${Math.min(100,pct)}%;background:${mc}"></div></div>`;
+    }).join('');
+    const coreRows=MODULES.filter(m=>coreActive.includes(m.id)).map(m=>{
+      const val=mv[m.id]||0;const meta=m.metaFn(units);const pct=calcPct(m.id,val,units);
+      return `<div class="pp-mod-row" style="opacity:0.9"><div class="pp-mod-icon">${m.icon}</div><div class="pp-mod-name" style="color:var(--domo)">${m.label}</div><div class="pp-mod-num">${val}/${meta}</div><div class="pp-mod-pct" style="color:var(--domo)">${pct}%</div></div><div class="pp-mod-bar-wrap"><div class="pp-mod-fill" style="width:${Math.min(100,pct)}%;background:var(--domo)"></div></div>`;
     }).join('');
     const metricsRow=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px">
       <div style="background:${clr}15;border:1px solid ${clr}40;border-radius:10px;padding:8px 12px">
@@ -904,7 +909,7 @@ function renderPropertyProgressCards(){
         <div style="font-size:clamp(8px,.75vw,10px);color:var(--text-muted);margin-top:6px">${modsWithUsage}/${activeMods.length} módulos en uso</div>
       </div>
     </div>`;
-    return `<div class="pp-card"><div class="pp-header"><div><div class="pp-name">${p.name}${p.core_notes?`<span style="margin-left:6px;cursor:help;font-size:12px;vertical-align:middle" title="Core: ${p.core_notes}">💡</span>`:''}</div><div class="pp-city">📍 ${p.city||'—'} · ${units} unid.</div>${p.entry_date?`<div style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted);margin-top:2px">📅 ${p.entry_date}</div>`:''}</div><div style="text-align:right"><span class="pill ${cfg.pill}">${cfg.label}</span></div></div><div class="pp-body">${metricsRow}${activeMods.length?`<div style="font-size:clamp(8px,.8vw,10px);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Módulos activos (${activeMods.length}/${USE_MODULES.length})</div><div class="pp-mod-list">${modRows}</div>`:`<div style="font-size:clamp(10px,.9vw,12px);color:var(--text-muted);padding:10px 0;text-align:center">Sin módulos activos</div>`}${inactiveMods.length?`<div style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted);margin-top:8px">Pendientes: ${inactiveMods.map(m=>m.icon+' '+m.label).join(', ')}</div>`:''}</div><div class="pp-footer"><div class="pp-days">⏱ Sem. ${getPropWeek(p)}/8 · ${getDaysFromEntry(p)} días</div><button class="pp-edit-btn" onclick="openEditModal('${p.id}')">✏️ Editar</button></div></div>`;
+    return `<div class="pp-card"><div class="pp-header"><div><div class="pp-name">${p.name}${p.core_notes?`<span style="margin-left:6px;cursor:help;font-size:12px;vertical-align:middle" title="Core: ${p.core_notes}">💡</span>`:''}</div><div class="pp-city">📍 ${p.city||'—'} · ${units} unid.</div>${p.entry_date?`<div style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted);margin-top:2px">📅 ${p.entry_date}</div>`:''}</div><div style="text-align:right"><span class="pill ${cfg.pill}">${cfg.label}</span></div></div><div class="pp-body">${metricsRow}${coreActive.length?`<div style="font-size:clamp(8px,.8vw,10px);font-weight:700;color:var(--domo);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px;margin-top:4px">Módulos Core</div><div class="pp-mod-list" style="margin-bottom:12px">${coreRows}</div>`:''}${activeMods.length?`<div style="font-size:clamp(8px,.8vw,10px);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Módulos de Uso (${activeMods.length}/${USE_MODULES.length})</div><div class="pp-mod-list">${modRows}</div>`:(!coreActive.length?`<div style="font-size:clamp(10px,.9vw,12px);color:var(--text-muted);padding:10px 0;text-align:center">Sin módulos activos</div>`:'')}${inactiveMods.length?`<div style="font-size:clamp(8px,.7vw,9px);color:var(--text-muted);margin-top:8px;line-height:1.4">Pendientes: ${inactiveMods.map(m=>m.label).join(', ')}</div>`:''}</div><div class="pp-footer"><div class="pp-days">⏱ Sem. ${getPropWeek(p)}/8 · ${getDaysFromEntry(p)} días</div><button class="pp-edit-btn" onclick="openEditModal('${p.id}')">✏️ Editar</button></div></div>`;
     }).join('');
     _fadeIn(_ppg);
   },30);
