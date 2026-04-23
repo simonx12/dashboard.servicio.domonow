@@ -1,8 +1,8 @@
 # DomoNow — Dashboard de Implementación
 ## Contexto Técnico y Funcional del Proyecto
 
-> **Última actualización:** 2026-04-22  
-> **Versión:** 3.0  
+> **Última actualización:** 2026-04-23  
+> **Versión:** 3.1  
 > **Responsable técnico:** Equipo Ofima S.A.S
 
 ---
@@ -128,15 +128,23 @@ Las fases son **acumulativas**: una propiedad en `fase2` tiene disponibles los m
 // Meta de un módulo para una propiedad
 calcMeta(moduleId, units) → número
 
-// % cumplimiento de un módulo
+// % cumplimiento de un módulo (usado en Abismo, NO en Implementación)
 calcPct(moduleId, valor, units) → 0–100
 
-// Progreso ponderado de una propiedad (promedio de sus módulos activos)
-getPropProgress(property) → 0–100
+// ⚠️ FÓRMULA ACTUALIZADA (2026-04-23)
+// Implementación = módulos activos de uso (excl. config y capacitación) / 13 totales
+getPropProgress(property) → Math.round((activeMods.length / 13) * 100)
 
 // Promedio global de todas las propiedades
 getGlobalProgress() → 0–100
+
+// Usabilidad Global = módulos con valor > 0 / total módulos activos (todas las propiedades)
+// Calculado en renderGlobalProgress() y renderKPIs()
 ```
+
+> **Implementación** y **Abismo** son métricas independientes:
+> - `getPropProgress` → presencia de módulos activos (implementación)
+> - `calcAbismo` → cumplimiento de metas por módulo (profundidad de uso)
 
 ---
 
@@ -196,9 +204,20 @@ showSection(id)
 
 1. **KPI Cards** (×5): Total propiedades, Fase 0, Fase 1, Fase 2, Fase 3 — con días promedio por fase.
 2. **Progreso por Fase**: Cards con barra de progreso y semana estimada de cada fase.
-3. **Avance General de Implementaciones**: Gráfica horizontal de barras apiladas (avance + pendiente), ordenada de mayor a menor. Coloreado por estado (verde ≥80%, naranja 50–79%, rojo <50%). Incluye KPI strip: Promedio Global, En Meta, Críticas.
+3. **Implementación Global** (chart card): Doughnut con % promedio de implementación + KPI `X%` y `N/M en meta` en el header.
+4. **Usabilidad Global** (chart card): Doughnut con % de módulos con uso real + KPI `X%` y `N/M mód. en uso` en el header.
 
 > ⚠️ La **Comparativa Semanal** fue movida a la sección **Configuración** (no aparece en el Dashboard).
+
+## 8.1 Avances — Componentes Actuales
+
+1. **Avance Ponderado Global**: Barra + ring chart + stats por fase.
+2. **Implementación Global** (chart card): Barras **horizontales** por propiedad, ordenadas de mayor a menor, coloreadas por semáforo.
+3. **Usabilidad Global** (chart card): Barras **verticales apiladas** por módulo: verde = con uso real, morado claro = sin uso aún.
+4. **Avance Individual por Propiedad**: Grid de tarjetas con métricas de implementación + usabilidad por propiedad.
+5. **% Cumplimiento por Módulo**: Gráfica de barras horizontales multiserie.
+
+> Los gráficos de Avances son distintos a los del Dashboard para evitar redundancia visual.
 
 ---
 
@@ -225,29 +244,59 @@ combinedSeal = Math.min(100, Math.round(avgPct * 0.2 + taskSeal * 0.8))
 
 ## 10. Integración Supabase
 
-### Credenciales (hardcodeadas en `app.js`)
+### Credenciales — Sistema de doble fuente (2026-04-23)
+
+Las credenciales se leen desde `SUPABASE_CONFIG`, definida en `config.js` (excluido de git vía `.gitignore`).
+
 ```js
-const SB_URL = 'https://dbtlyjaxqoezxbwvkimc.supabase.co';
-const SB_KEY = 'sb_publishable_OOOitM2zGuo78KEO_K0Mug_3dkdh6z1';
+// config.js (local, NO subir al repo)
+const SUPABASE_CONFIG = {
+  url: 'https://dbtlyjaxqoezxbwvkimc.supabase.co',
+  key: 'sb_publishable_OOOitM2zGuo78KEO_K0Mug_3dkdh6z1'
+};
 ```
 
-### Funciones principales de sincronización
+**Fallback para deploy** (`index.html`, inline antes de `app.js`):
+```js
+if (typeof SUPABASE_CONFIG === 'undefined') {
+  var SUPABASE_CONFIG = { url: '...', key: '...' };
+}
+```
+- En **local**: `config.js` define `SUPABASE_CONFIG` → el fallback no actúa.
+- En **deploy** (Netlify, Vercel, etc.): `config.js` no existe → el fallback provee las credenciales.
+
+### Autenticación (Supabase Auth)
+
+El flujo de autenticación usa `sb.auth.signInWithPassword` y `sb.auth.onAuthStateChange`:
+
+```
+DOMContentLoaded
+  → Carga SDK Supabase
+  → Crea cliente con SUPABASE_CONFIG
+  → sb.auth.getSession() → ¿sesión activa?
+    SÍ → onUserLoggedIn(user) → fetchAllData() → dashboard
+    NO → goLogin() → loginUser() → onUserLoggedIn()
+```
+
 | Función | Descripción |
 |---------|-------------|
-| `connectSupabase()` | Inicializa cliente y valida conexión |
+| `loginUser()` | Autenticación con email/password via Supabase Auth |
+| `logoutUser()` | Cierra sesión y redirige al login |
+| `onUserLoggedIn(user)` | Post-login: carga datos y muestra dashboard |
+| `updateUserUI(user)` | Muestra avatar/nombre/email en sidebar |
+
+### Funciones de sincronización
+| Función | Descripción |
+|---------|-------------|
 | `fetchAllData()` | Carga todas las propiedades y tareas desde Supabase |
 | `insertSupabase(prop)` | Inserta nueva propiedad |
-| `updateSupabase(id, prop)` | Actualiza propiedad existente |
+| `updateSupabase(id, prop)` | Actualiza propiedad (omite `entry_date` si está vacía) |
 | `deleteSupabase(id)` | Elimina propiedad |
 | `saveTaskToSB(propId, task)` | Inserta nueva tarea |
 | `updateTaskProgressSB(taskId, progress)` | Actualiza progreso de tarea |
 | `deleteTaskSB(taskId)` | Elimina tarea |
 | `startRealtime()` | Suscripción a cambios en tiempo real via Supabase Realtime |
 | `startAutoRefresh()` | Polling automático configurable (default: 60s) |
-
-### Persistencia offline
-- `saveStateLocal()` / `loadStateLocal()`: Caché de propiedades en `localStorage` (solo activo sin Supabase).
-- `localStorage` keys: `dn_sb_url`, `dn_sb_key`, `dn_settings`, `dn_state_props`, `dn_theme`.
 
 ---
 
@@ -316,10 +365,19 @@ getDaysFromEntry(property) → número de días desde entry_date hasta hoy
 |-------|--------|
 | 2026-04-22 | Refactorización completa: monolito 5,164 líneas → estructura modular (8 CSS + 1 JS) |
 | 2026-04-22 | Eliminado nav item "Módulos" del sidebar |
-| 2026-04-22 | Agregada gráfica "Avance General de Implementaciones" en Dashboard (reemplaza gráficas de módulos) |
+| 2026-04-22 | Agregada gráfica "Avance General de Implementaciones" en Dashboard |
 | 2026-04-22 | Comparativa Semanal movida de Dashboard → Configuración |
-| 2026-04-22 | Mejorado `<head>`: `preconnect` para fuentes, `meta description`, `theme-color`, `defer` en app.js |
-| 2026-04-22 | Chart.js movido al final del `<body>` para mejor rendimiento |
+| 2026-04-22 | Mejorado `<head>`: `preconnect`, `meta description`, `theme-color`, `defer` en app.js |
+| 2026-04-22 | Implementado sistema de autenticación Supabase Auth (login, logout, sesión persistente) |
+| 2026-04-23 | **Credenciales**: movidas a `config.js` (excluido de git) + fallback inline en `index.html` para deploy |
+| 2026-04-23 | **Fix deploy**: error `Cannot read properties of null (reading 'auth')` resuelto con fallback de `SUPABASE_CONFIG` |
+| 2026-04-23 | **Fórmula Implementación**: cambiada de promedio de % por módulo → `(módulos activos / 13) × 100` |
+| 2026-04-23 | **Fecha de inicio**: `entry_date` se preserva al editar una propiedad si el campo queda vacío |
+| 2026-04-23 | **`updateSupabase`**: no sobreescribe `entry_date` en Supabase si el valor es vacío |
+| 2026-04-23 | **Login responsive**: media queries para tablet (≤768px) y móvil (≤480px) en `css/login.css` |
+| 2026-04-23 | **Dashboard**: KPIs de Implementación Global y Usabilidad Global añadidos a los headers de las chart cards |
+| 2026-04-23 | **Avances**: dos chart cards separadas (barras horizontales + barras apiladas) distintas al Dashboard |
+| 2026-04-23 | **Fix gráficas Avances**: charts envueltos en `setTimeout(50ms)` para evitar canvas 0×0 en sección oculta |
 
 ---
 
