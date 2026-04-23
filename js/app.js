@@ -1,23 +1,37 @@
-
-// ══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 //  MODULE DEFINITIONS
-// ══════════════════════════════════════════════════════
+// ═══════════════════════════════════════════════════════
 const MODULES = [
-  {id:'configuracion',label:'Configuración',icon:'⚙️',unit:'ítems configurados',metaLabel:u=>`Meta: configuración completa del conjunto`,metaFn:u=>1},
-  {id:'capacitacion',label:'Capacitación',icon:'🎓',unit:'sesiones realizadas',metaLabel:u=>`Meta: ${Math.round(u*0.30)} residentes capacitados (30% de ${u})`,metaFn:u=>Math.round(u*0.30)},
-  {id:'acceso',label:'Acceso',icon:'🔑',unit:'pases de acceso',metaLabel:u=>`Meta: ${Math.round(u*0.50)} pases (50% de ${u})`,metaFn:u=>Math.round(u*0.50)},
-  {id:'muro',label:'Muro',icon:'💬',unit:'publicaciones/mes',metaLabel:u=>`Meta fija: 8 publicaciones al mes`,metaFn:u=>8},
-  {id:'alertas',label:'Alertas',icon:'🔔',unit:'alertas/mes',metaLabel:u=>`Meta: mínimo 2, ideal 5 alertas/mes`,metaFn:u=>2},
-  {id:'solicitudes',label:'Solicitudes',icon:'📋',unit:'aptos con solicitudes',metaLabel:u=>`Meta: ${Math.round(u*0.50)} aptos (50% de ${u})`,metaFn:u=>Math.round(u*0.50)},
-  {id:'zonas',label:'Zonas Comunes',icon:'⬜',unit:'reservas/mes',metaLabel:u=>`Meta: ${Math.round(u*0.50)} reservas (50% de ${u})`,metaFn:u=>Math.round(u*0.50)},
-  {id:'encuestas',label:'Encuestas',icon:'📊',unit:'aptos participantes',metaLabel:u=>`Meta: ${Math.round(u*0.50)} aptos (50% de ${u})`,metaFn:u=>Math.round(u*0.50)},
-  {id:'votaciones',label:'Votaciones',icon:'🗳️',unit:'aptos participantes',metaLabel:u=>`Meta: ${Math.round(u*0.50)} aptos (50% de ${u})`,metaFn:u=>Math.round(u*0.50)},
-  {id:'eventos',label:'Eventos',icon:'📅',unit:'eventos publicados',metaLabel:u=>`Meta: 4 eventos al mes`,metaFn:u=>4},
-  {id:'asambleas',label:'Asambleas',icon:'🏛️',unit:'aptos participantes',metaLabel:u=>`Meta: ${Math.round(u*0.50)} aptos (50% de ${u})`,metaFn:u=>Math.round(u*0.50)},
-  {id:'normativo',label:'Normativo',icon:'📜',unit:'documentos normativos publicados',metaLabel:u=>`Meta: ${Math.round(u*0.50)} aptos con acceso (50% de ${u})`,metaFn:u=>Math.round(u*0.50)},
-  {id:'documentos',label:'Documental',icon:'📄',unit:'aptos con acceso',metaLabel:u=>`Meta: ${Math.round(u*0.50)} aptos (50% de ${u})`,metaFn:u=>Math.round(u*0.50)},
-  {id:'financiero',label:'Financiero',icon:'💰',unit:'aptos activos',metaLabel:u=>`Meta: ${Math.round(u*0.50)} aptos (50% de ${u})`,metaFn:u=>Math.round(u*0.50)},
-  {id:'superadmin',label:'Superadministrador',icon:'👑',unit:'usuarios superadmin activos',metaLabel:u=>`Meta: 1 superadmin configurado`,metaFn:u=>1}
+  {id:'configuracion', label:'Configuración',      icon:'⚙️', unit:'ítems configurados',
+    metaLabel:u=>`Meta: configuración completa del conjunto`, metaFn:u=>1},
+  {id:'capacitacion',  label:'Capacitación',      icon:'🎓', unit:'sesiones realizadas',
+    metaLabel:u=>`Meta: ${Math.round(u*0.30)} residentes capacitados (30% de ${u})`, metaFn:u=>Math.round(u*0.30)},
+  {id:'acceso',        label:'Acceso',             icon:'🔑', unit:'pases de acceso',
+    metaLabel:u=>`Meta: ${Math.round(u*0.50)} pases (50% de ${u})`, metaFn:u=>Math.round(u*0.50)},
+  {id:'muro',          label:'Muro',               icon:'💬', unit:'publicaciones/mes',
+    metaLabel:u=>`Meta fija: 8 publicaciones al mes`, metaFn:u=>8},
+  {id:'alertas',       label:'Alertas',            icon:'🔔', unit:'alertas/mes',
+    metaLabel:u=>`Meta: mínimo 2 alertas/mes`, metaFn:u=>2},
+  {id:'solicitudes',   label:'Solicitudes',        icon:'📋', unit:'aptos con solicitudes',
+    metaLabel:u=>`Meta: ${Math.round(u*0.50)} aptos (50% de ${u})`, metaFn:u=>Math.round(u*0.50)},
+  {id:'zonas',         label:'Zonas Comunes',      icon:'⬜', unit:'reservas/mes',
+    metaLabel:u=>`Meta: ${Math.round(u*0.50)} reservas (50% de ${u})`, metaFn:u=>Math.round(u*0.50)},
+  {id:'encuestas',     label:'Encuestas',          icon:'📊', unit:'encuestas publicadas',
+    metaLabel:u=>`Meta: mínimo 3 encuestas publicadas`, metaFn:u=>3},
+  {id:'votaciones',    label:'Votaciones',         icon:'🗳️', unit:'votaciones publicadas',
+    metaLabel:u=>`Meta: mínimo 3 votaciones publicadas`, metaFn:u=>3},
+  {id:'eventos',       label:'Eventos',            icon:'📅', unit:'eventos publicados',
+    metaLabel:u=>`Meta: 4 eventos al mes`, metaFn:u=>4},
+  {id:'asambleas',     label:'Asambleas',          icon:'🏛️', unit:'aptos participantes',
+    metaLabel:u=>`Meta: ${Math.round(u*0.50)} aptos (50% de ${u})`, metaFn:u=>Math.round(u*0.50)},
+  {id:'normativo',     label:'Normativo',          icon:'📜', unit:'documentos normativos publicados',
+    metaLabel:u=>`Meta: ${Math.round(u*0.50)} aptos con acceso (50% de ${u})`, metaFn:u=>Math.round(u*0.50)},
+  {id:'documentos',    label:'Documental',         icon:'📄', unit:'documentos subidos',
+    metaLabel:u=>`Meta: mínimo 5 documentos subidos`, metaFn:u=>5},
+  {id:'financiero',    label:'Financiero',         icon:'💰', unit:'aptos activos',
+    metaLabel:u=>`Meta: ${u} aptos (100% de ${u})`, metaFn:u=>u},
+  {id:'superadmin',    label:'Superadministrador', icon:'👑', unit:'usuarios superadmin activos',
+    metaLabel:u=>`Meta: 1 superadmin configurado`, metaFn:u=>1}
 ];
 
 // Configuración y Capacitación son PREREQUISITOS, NO módulos de uso
@@ -25,8 +39,41 @@ const NON_MODULES=['configuracion','capacitacion'];
 // Módulos reales de uso (sin configuración ni capacitación)
 const USE_MODULES=MODULES.filter(m=>!NON_MODULES.includes(m.id));
 
+// ── META DEL ABISMO (cumplimiento de objetivos de uso profundo) ──
 function calcMeta(mid,units){const m=MODULES.find(x=>x.id===mid);if(!m)return 0;return m.metaFn(units);}
 function calcPct(mid,value,units){const meta=calcMeta(mid,units);if(!meta||meta<=0)return 0;return Math.min(100,Math.round((value/meta)*100));}
+
+// ── META DE USABILIDAD (distinta al Abismo) ──
+// Reglas:
+//   - Por defecto:   50% de los apartamentos (units)
+//   - muro:          8 publicaciones/mes (fijo)
+//   - alertas:       2 alertas/mes (fijo)
+//   - documentos:    5 documentos subidos (fijo)
+//   - votaciones:    3 votaciones publicadas (fijo)
+//   - encuestas:     3 encuestas publicadas (fijo)
+//   - financiero:    100% de los apartamentos
+const USAB_META = {
+  muro:       () => 8,
+  alertas:    () => 2,
+  documentos: () => 5,
+  votaciones: () => 3,
+  encuestas:  () => 3,
+  financiero: (u) => u,          // 100% de aptos
+  _default:   (u) => Math.round(u * 0.50)
+};
+function calcUsabMeta(mid, units){
+  const fn = USAB_META[mid] || USAB_META._default;
+  return Math.max(1, fn(units));
+}
+// Devuelve true si el módulo supera su meta de usabilidad
+function moduleInUse(mid, value, units){
+  return (value || 0) >= calcUsabMeta(mid, units);
+}
+// % de cumplimiento de usabilidad de un módulo (0-100)
+function calcUsabPct(mid, value, units){
+  const meta = calcUsabMeta(mid, units);
+  return Math.min(100, Math.round(((value || 0) / meta) * 100));
+}
 
 // Phase → modules mapping
 const PHASE_MODULES = {
@@ -325,13 +372,14 @@ function renderKPIs(){
       <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted);margin-top:2px">${implOnTarget}/${p.length} en meta</div>
     </div>`;
 
-  // ── Usabilidad Global ──
+  // ── Usabilidad Global (usa metas reales por módulo) ──
   let totalActiveMods=0,totalWithUsage=0;
   p.forEach(x=>{
     const mv=x.module_values||{};
+    const units=x.units||50;
     const active=(x.modules||[]).filter(mid=>!NON_MODULES.includes(mid));
     totalActiveMods+=active.length;
-    totalWithUsage+=active.filter(mid=>(mv[mid]||0)>0).length;
+    totalWithUsage+=active.filter(mid=>moduleInUse(mid, mv[mid]||0, units)).length;
   });
   const usabAvg=totalActiveMods>0?Math.round((totalWithUsage/totalActiveMods)*100):0;
   const usabColor=usabAvg>=80?'#00b460':usabAvg>=50?'#e67e00':'#820ad1';
@@ -339,7 +387,7 @@ function renderKPIs(){
   if(usabEl) usabEl.innerHTML=`
     <div style="text-align:right">
       <div style="font-size:clamp(22px,2.2vw,32px);font-weight:800;color:${usabColor};line-height:1">${usabAvg}%</div>
-      <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted);margin-top:2px">${totalWithUsage}/${totalActiveMods} mód. en uso</div>
+      <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted);margin-top:2px">${totalWithUsage}/${totalActiveMods} en meta</div>
     </div>`;
 }
 
@@ -572,13 +620,14 @@ function renderGlobalProgress(){
   const props=state.properties;
   const g=getGlobalProgress();
 
-  // ── Usabilidad global ──
+  // ── Usabilidad global (metas reales por módulo) ──
   let totalActiveMods=0,totalWithUsage=0;
   props.forEach(p=>{
     const mv=p.module_values||{};
+    const units=p.units||50;
     const active=(p.modules||[]).filter(mid=>!NON_MODULES.includes(mid));
     totalActiveMods+=active.length;
-    totalWithUsage+=active.filter(mid=>(mv[mid]||0)>0).length;
+    totalWithUsage+=active.filter(mid=>moduleInUse(mid, mv[mid]||0, units)).length;
   });
   const usabGlobal=totalActiveMods>0?Math.round((totalWithUsage/totalActiveMods)*100):0;
   const usabColor=usabGlobal>=80?'#00b460':usabGlobal>=50?'#e67e00':'#820ad1';
@@ -587,9 +636,9 @@ function renderGlobalProgress(){
   // ── KPI headers ──
   const implOnTarget=props.filter(p=>getPropProgress(p)>=80).length;
   if($('pgImplKpi')) $('pgImplKpi').innerHTML=`<div style="font-size:clamp(24px,2.4vw,34px);font-weight:800;color:${implColor};line-height:1">${g}%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${implOnTarget}/${props.length} en meta</div>`;
-  if($('pgUsabKpi')) $('pgUsabKpi').innerHTML=`<div style="font-size:clamp(24px,2.4vw,34px);font-weight:800;color:${usabColor};line-height:1">${usabGlobal}%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${totalWithUsage}/${totalActiveMods} en uso</div>`;
+  if($('pgUsabKpi')) $('pgUsabKpi').innerHTML=`<div style="font-size:clamp(24px,2.4vw,34px);font-weight:800;color:${usabColor};line-height:1">${usabGlobal}%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${totalWithUsage}/${totalActiveMods} en meta</div>`;
   if($('pgImplSub')) $('pgImplSub').textContent=`${implOnTarget}/${props.length} propiedades en meta (≥80%) · promedio por fase`;
-  if($('pgUsabSub')) $('pgUsabSub').textContent=`${totalWithUsage} de ${totalActiveMods} módulos activos con uso real`;
+  if($('pgUsabSub')) $('pgUsabSub').textContent=`${totalWithUsage} de ${totalActiveMods} módulos activos han alcanzado su meta de usabilidad`;
 
   // ── Gráficas (diferidas 50ms para canvas visible) ──
   destroyChart('chartPgImpl');
@@ -639,7 +688,7 @@ function renderGlobalProgress(){
       const total=props.length;
       const modLabels=USE_MODULES.map(m=>m.icon+' '+m.label);
       const modVals=USE_MODULES.map(m=>
-        Math.round((props.filter(p=>(p.modules||[]).includes(m.id)&&((p.module_values||{})[m.id]||0)>0).length/total)*100)
+        Math.round((props.filter(p=>(p.modules||[]).includes(m.id)&&moduleInUse(m.id,(p.module_values||{})[m.id]||0,p.units||50)).length/total)*100)
       );
       const palette=[
         'rgba(130,10,209,.6)','rgba(14,165,233,.6)','rgba(0,180,100,.6)',
@@ -688,8 +737,8 @@ function renderPropertyProgressCards(){
     const allActive=p.modules||[];
     const activeMods=allActive.filter(mid=>!NON_MODULES.includes(mid));
     const inactiveMods=USE_MODULES.filter(m=>!activeMods.includes(m.id));
-    // Usabilidad: módulos activos con uso real
-    const modsWithUsage=activeMods.filter(mid=>(mv[mid]||0)>0).length;
+    // Usabilidad: módulos activos que alcanzan su meta real de usabilidad
+    const modsWithUsage=activeMods.filter(mid=>moduleInUse(mid, mv[mid]||0, units)).length;
     const usabilidad=activeMods.length>0?Math.round((modsWithUsage/activeMods.length)*100):0;
     const usabColor=usabilidad>=80?'#00b460':usabilidad>=50?'#e67e00':'#e03030';
     const modRows=USE_MODULES.filter(m=>activeMods.includes(m.id)).map(m=>{

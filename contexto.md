@@ -2,7 +2,7 @@
 ## Contexto Técnico y Funcional del Proyecto
 
 > **Última actualización:** 2026-04-23  
-> **Versión:** 3.1  
+> **Versión:** 3.2  
 > **Responsable técnico:** Equipo Ofima S.A.S
 
 ---
@@ -93,23 +93,23 @@ El proyecto fue refactorizado desde un monolito único `index.html` de **5,164 l
 
 ### 5.1 Definición de Módulos (15 en total)
 
-| ID | Nombre | Unidad | Meta base |
-|----|--------|--------|-----------|
-| `configuracion` | Configuración | ítems configurados | 1 (fija) |
-| `capacitacion` | Capacitación | sesiones realizadas | 30% de unidades |
-| `acceso` | Acceso | pases de acceso | 50% de unidades |
-| `muro` | Muro | publicaciones/mes | 8 (fija) |
-| `alertas` | Alertas | alertas/mes | 2 (mínimo) |
-| `solicitudes` | Solicitudes | aptos con solicitudes | 50% de unidades |
-| `zonas` | Zonas Comunes | reservas/mes | 50% de unidades |
-| `encuestas` | Encuestas | aptos participantes | 50% de unidades |
-| `votaciones` | Votaciones | aptos participantes | 50% de unidades |
-| `eventos` | Eventos | eventos publicados | 4 (fija) |
-| `asambleas` | Asambleas | aptos participantes | 50% de unidades |
-| `normativo` | Normativo | documentos publicados | 50% de unidades |
-| `documentos` | Documental | aptos con acceso | 50% de unidades |
-| `financiero` | Financiero | aptos activos | 50% de unidades |
-| `superadmin` | Superadministrador | usuarios superadmin | 1 (fija) |
+| ID | Nombre | Unidad | Meta Abismo/Modal | Meta Usabilidad |
+|----|--------|--------|-------------------|-----------------|
+| `configuracion` | Configuración | ítems configurados | 1 (fija) | 1 (fija) |
+| `capacitacion` | Capacitación | sesiones realizadas | 30% de unidades | 30% de unidades |
+| `acceso` | Acceso | pases de acceso | 50% de unidades | 50% de unidades |
+| `muro` | Muro | publicaciones/mes | 8 (fija) | **8 pub/mes** (fija) |
+| `alertas` | Alertas | alertas/mes | 2 (mínimo) | **2 alertas/mes** (fija) |
+| `solicitudes` | Solicitudes | aptos con solicitudes | 50% de unidades | 50% de unidades |
+| `zonas` | Zonas Comunes | reservas/mes | 50% de unidades | 50% de unidades |
+| `encuestas` | Encuestas | encuestas publicadas | **3 (fija)** | **3 encuestas** (fija) |
+| `votaciones` | Votaciones | votaciones publicadas | **3 (fija)** | **3 votaciones** (fija) |
+| `eventos` | Eventos | eventos publicados | 4 (fija) | 4 (fija) |
+| `asambleas` | Asambleas | aptos participantes | 50% de unidades | 50% de unidades |
+| `normativo` | Normativo | documentos normativos | 50% de unidades | 50% de unidades |
+| `documentos` | Documental | documentos subidos | **5 (fija)** | **5 documentos** (fija) |
+| `financiero` | Financiero | aptos activos | **100% de unidades** | **100% de aptos** |
+| `superadmin` | Superadministrador | usuarios superadmin | 1 (fija) | 1 (fija) |
 
 ### 5.2 Fases y Módulos Asignados
 
@@ -125,10 +125,10 @@ Las fases son **acumulativas**: una propiedad en `fase2` tiene disponibles los m
 ### 5.3 Cálculo de Progreso
 
 ```js
-// Meta de un módulo para una propiedad
+// Meta de un módulo para una propiedad (Abismo y modal)
 calcMeta(moduleId, units) → número
 
-// % cumplimiento de un módulo (usado en Abismo, NO en Implementación)
+// % cumplimiento de un módulo (usado en Abismo)
 calcPct(moduleId, valor, units) → 0–100
 
 // ⚠️ FÓRMULA ACTUALIZADA (2026-04-23)
@@ -138,13 +138,23 @@ getPropProgress(property) → Math.round((activeMods.length / 13) * 100)
 // Promedio global de todas las propiedades
 getGlobalProgress() → 0–100
 
-// Usabilidad Global = módulos con valor > 0 / total módulos activos (todas las propiedades)
+// ── META DE USABILIDAD (independiente del Abismo) ──
+// Metas por módulo (USAB_META):
+//   muro: 8 pub/mes | alertas: 2/mes | documentos: 5 docs
+//   votaciones: 3 | encuestas: 3 | financiero: 100% aptos
+//   resto: 50% de unidades
+calcUsabMeta(moduleId, units) → número   // devuelve la meta de usabilidad
+moduleInUse(moduleId, value, units) → bool  // true si value >= calcUsabMeta
+calcUsabPct(moduleId, value, units) → 0–100 // % de cumplimiento de usabilidad
+
+// Usabilidad Global = módulos con value >= su meta / total módulos activos
 // Calculado en renderGlobalProgress() y renderKPIs()
 ```
 
-> **Implementación** y **Abismo** son métricas independientes:
+> **Implementación** y **Abismo** y **Usabilidad** son métricas independientes:
 > - `getPropProgress` → presencia de módulos activos (implementación)
-> - `calcAbismo` → cumplimiento de metas por módulo (profundidad de uso)
+> - `calcAbismo` → cumplimiento de metas del Abismo (profundidad de uso, pesos Moore)
+> - `moduleInUse` / `calcUsabMeta` → usabilidad real según metas operativas por módulo
 
 ---
 
@@ -376,8 +386,14 @@ getDaysFromEntry(property) → número de días desde entry_date hasta hoy
 | 2026-04-23 | **`updateSupabase`**: no sobreescribe `entry_date` en Supabase si el valor es vacío |
 | 2026-04-23 | **Login responsive**: media queries para tablet (≤768px) y móvil (≤480px) en `css/login.css` |
 | 2026-04-23 | **Dashboard**: KPIs de Implementación Global y Usabilidad Global añadidos a los headers de las chart cards |
-| 2026-04-23 | **Avances**: dos chart cards separadas (barras horizontales + barras apiladas) distintas al Dashboard |
+| 2026-04-23 | **Avances**: dos chart cards separadas (barras horizontales por fase + polar area por módulo) distintas al Dashboard |
 | 2026-04-23 | **Fix gráficas Avances**: charts envueltos en `setTimeout(50ms)` para evitar canvas 0×0 en sección oculta |
+| 2026-04-23 | **Sidebar colapsable**: toggle desktop (64px icono-only) + drawer móvil con overlay. Estado persistido en `localStorage` |
+| 2026-04-23 | **Logo DomoNow**: SVG creado en `assets/logo.svg`; icono hamburguesa `☰` en sidebar toggle |
+| 2026-04-23 | **PWA**: `manifest.json` + `sw.js` (cache-first assets, network-first Supabase) + iconos `assets/icons/` |
+| 2026-04-23 | **PWA rutas relativas**: SW y manifest con `./` para funcionar en cualquier subpath/dominio |
+| 2026-04-23 | **Usabilidad por metas reales**: `calcUsabMeta`, `moduleInUse`, `calcUsabPct` — metas operativas independientes del Abismo |
+| 2026-04-23 | **metaFn unificada**: encuestas→3, votaciones→3, documentos→5, financiero→100% aptos en MODULES y USAB_META |
 
 ---
 
