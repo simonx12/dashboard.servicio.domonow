@@ -2,34 +2,44 @@
   "name": "DomoNow – Dashboard de Implementación",
   "short_name": "DomoNow",
   "description": "Dashboard de seguimiento de implementación DomoNow para conjuntos residenciales.",
-  "start_url": "/",
-  "scope": "/",
+  "start_url": "./",
+  "scope": "./",
   "display": "standalone",
+  "display_override": ["standalone", "minimal-ui", "browser"],
   "orientation": "any",
   "background_color": "#0d0a1a",
   "theme_color": "#820ad1",
   "lang": "es",
   "categories": ["business", "productivity"],
+  "prefer_related_applications": false,
   "icons": [
     { "src": "assets/icons/favicon-32.png",      "sizes": "32x32",   "type": "image/png" },
     { "src": "assets/icons/apple-touch-icon.png","sizes": "180x180", "type": "image/png" },
     { "src": "assets/icons/icon-192.png",         "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "assets/icons/icon-512.png",         "sizes": "512x512", "type": "image/png", "purpose": "any maskable" },
+    { "src": "assets/icons/icon-512.png",         "sizes": "512x512", "type": "image/png", "purpose": "maskable" },
     { "src": "assets/logo.svg",                   "sizes": "any",     "type": "image/svg+xml" }
   ],
   "shortcuts": [
     {
       "name": "Dashboard",
-      "url": "/?section=dashboard",
+      "short_name": "Inicio",
+      "url": "./?section=dashboard",
       "description": "Ir al Dashboard principal",
       "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
     },
     {
       "name": "Avances",
-      "url": "/?section=progress",
+      "short_name": "Avances",
+      "url": "./?section=progress",
       "description": "Ver avances de implementación",
       "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
+    },
+    {
+      "name": "Propiedades",
+      "short_name": "Propiedades",
+      "url": "./?section=properties",
+      "description": "Gestionar propiedades",
+      "icons": [{ "src": "assets/icons/icon-192.png", "sizes": "192x192" }]
     }
-  ],
-  "screenshots": []
+  ]
 }

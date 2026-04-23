@@ -1,109 +1,116 @@
 /* ══════════════════════════════════════════
-   DomoNow Service Worker — PWA
-   Cache-first para assets estáticos
-   Network-first para Supabase (datos en vivo)
+   DomoNow Service Worker — PWA + Web
+   Compatible con cualquier base path (/, /app/, etc.)
    ══════════════════════════════════════════ */
 
 const CACHE_NAME = 'domonow-v3-1';
 
-// Assets que se cachean en la instalación
-const PRECACHE = [
-  '/',
-  '/index.html',
-  '/manifest.json',
-  '/css/base.css',
-  '/css/layout.css',
-  '/css/components.css',
-  '/css/dashboard.css',
-  '/css/progress.css',
-  '/css/strategy.css',
-  '/css/tasks.css',
-  '/css/lineal.css',
-  '/css/login.css',
-  '/js/app.js',
-  '/assets/logo.svg',
-  '/assets/icons/icon-192.png',
-  '/assets/icons/icon-512.png',
-  'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&family=Syne:wght@700;800&display=swap',
-  'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js'
+// Base path dinámico (funciona en / y en /subdir/)
+const BASE = self.registration.scope;
+
+// Assets locales (relativos al scope del SW)
+const LOCAL_ASSETS = [
+  '',               // index.html (raíz del scope)
+  'manifest.json',
+  'css/base.css',
+  'css/layout.css',
+  'css/components.css',
+  'css/dashboard.css',
+  'css/progress.css',
+  'css/strategy.css',
+  'css/tasks.css',
+  'css/lineal.css',
+  'css/login.css',
+  'js/app.js',
+  'assets/logo.svg',
+  'assets/icons/icon-192.png',
+  'assets/icons/icon-512.png',
 ];
 
-// ── Install: precachear assets estáticos ──
+// Assets externos (CDN / Fonts) — absolutos
+const EXTERNAL_ASSETS = [
+  'https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;600&family=Syne:wght@700;800&display=swap',
+  'https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js',
+  'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js',
+];
+
+// ── Install ──
 self.addEventListener('install', event => {
   self.skipWaiting();
-  event.waitUntil(
-    caches.open(CACHE_NAME).then(cache => {
-      return Promise.allSettled(
-        PRECACHE.map(url =>
-          cache.add(url).catch(e => console.warn('[SW] No se pudo cachear:', url, e))
-        )
-      );
-    })
-  );
+  event.waitUntil((async () => {
+    const cache = await caches.open(CACHE_NAME);
+    // Cachear locales con path absoluto construido desde el scope
+    const localUrls = LOCAL_ASSETS.map(p => BASE + p);
+    await Promise.allSettled([
+      ...localUrls.map(url => cache.add(url).catch(e => console.warn('[SW] No cacheado:', url, e.message))),
+      ...EXTERNAL_ASSETS.map(url => cache.add(url).catch(e => console.warn('[SW] No cacheado:', url, e.message))),
+    ]);
+  })());
 });
 
-// ── Activate: limpiar caches viejos ──
+// ── Activate ──
 self.addEventListener('activate', event => {
   event.waitUntil(
-    caches.keys().then(keys =>
-      Promise.all(
-        keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))
-      )
-    ).then(() => self.clients.claim())
+    caches.keys()
+      .then(keys => Promise.all(keys.filter(k => k !== CACHE_NAME).map(k => caches.delete(k))))
+      .then(() => self.clients.claim())
   );
 });
 
-// ── Fetch: estrategia por tipo de request ──
+// ── Fetch ──
 self.addEventListener('fetch', event => {
+  if (event.request.method !== 'GET') return;
   const url = new URL(event.request.url);
 
-  // 1. Supabase API → Network-first (datos siempre frescos)
+  // Supabase API → Network-first (datos siempre frescos)
   if (url.hostname.includes('supabase.co')) {
     event.respondWith(networkFirst(event.request));
     return;
   }
 
-  // 2. Google Fonts → Cache-first
-  if (url.hostname.includes('fonts.goog') || url.hostname.includes('fonts.gstatic')) {
+  // Google Fonts / CDN → Cache-first
+  if (
+    url.hostname.includes('fonts.goog') ||
+    url.hostname.includes('fonts.gstatic') ||
+    url.hostname.includes('cdn.jsdelivr.net') ||
+    url.hostname.includes('cdnjs')
+  ) {
     event.respondWith(cacheFirst(event.request));
     return;
   }
 
-  // 3. CDN (Chart.js, Supabase SDK) → Cache-first
-  if (url.hostname.includes('cdn.jsdelivr.net') || url.hostname.includes('cdnjs')) {
-    event.respondWith(cacheFirst(event.request));
-    return;
-  }
-
-  // 4. Assets locales (CSS, JS, imágenes, HTML) → Cache-first con fallback
-  if (event.request.method === 'GET') {
-    event.respondWith(cacheFirst(event.request));
+  // Assets locales → Cache-first, fallback a red, fallback a index.html
+  if (url.href.startsWith(BASE)) {
+    event.respondWith(cacheFirst(event.request, true));
   }
 });
 
-// ── Estrategia: Cache-first ──
-async function cacheFirst(request) {
+// ── Cache-first ──
+async function cacheFirst(request, fallbackToIndex = false) {
   const cached = await caches.match(request);
   if (cached) return cached;
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    if (response && response.ok) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }
     return response;
   } catch {
-    return new Response('<h2>Sin conexión</h2><p>DomoNow no está disponible offline para este recurso.</p>', {
-      headers: { 'Content-Type': 'text/html' }
-    });
+    // Si es una navegación HTML, devolver index.html (SPA fallback)
+    if (fallbackToIndex && request.headers.get('accept')?.includes('text/html')) {
+      const indexCache = await caches.match(BASE);
+      if (indexCache) return indexCache;
+    }
+    return new Response('', { status: 503, statusText: 'Offline' });
   }
 }
 
-// ── Estrategia: Network-first ──
+// ── Network-first ──
 async function networkFirst(request) {
   try {
     const response = await fetch(request);
-    if (response.ok) {
+    if (response && response.ok) {
       const cache = await caches.open(CACHE_NAME);
       cache.put(request, response.clone());
     }
@@ -111,6 +118,7 @@ async function networkFirst(request) {
   } catch {
     const cached = await caches.match(request);
     return cached || new Response(JSON.stringify({ error: 'offline' }), {
+      status: 503,
       headers: { 'Content-Type': 'application/json' }
     });
   }

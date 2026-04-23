@@ -42,14 +42,20 @@
   <link rel="stylesheet" href="css/lineal.css">
   <link rel="stylesheet" href="css/login.css">
 
-  <!-- Service Worker -->
+  <!-- Service Worker (PWA) -->
   <script>
-    if ('serviceWorker' in navigator) {
+    if ('serviceWorker' in navigator && location.protocol !== 'file:') {
       window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then(reg => console.log('[DomoNow] SW registrado:', reg.scope))
-          .catch(err => console.warn('[DomoNow] SW error:', err));
+        navigator.serviceWorker.register('./sw.js', { scope: './' })
+          .then(reg => {
+            console.log('[DomoNow] SW registrado en scope:', reg.scope);
+            // Verificar actualizaciones periódicamente
+            setInterval(() => reg.update(), 60 * 60 * 1000);
+          })
+          .catch(err => console.warn('[DomoNow] SW no disponible:', err.message));
       });
+    } else if (location.protocol === 'file:') {
+      console.info('[DomoNow] SW omitido en file://. Sirve la app desde un servidor HTTP para PWA completa.');
     }
   </script>
 </head>
