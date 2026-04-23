@@ -115,13 +115,10 @@ const $=id=>document.getElementById(id);
 
 // ══════ HELPERS ══════
 function getPropProgress(p){
-  // Solo cuenta módulos reales de uso (excluye configuración y capacitación)
-  const allMods=p.modules||[];
-  const mods=allMods.filter(mid=>!NON_MODULES.includes(mid));
-  if(!mods.length)return 0;
-  const vals=p.module_values||{},units=p.units||50;
-  const sum=mods.reduce((s,mid)=>s+calcPct(mid,vals[mid]||0,units),0);
-  return Math.round(sum/mods.length);
+  // Implementación = módulos activos de uso / 13 módulos totales de uso
+  const TOTAL_MODULES = USE_MODULES.length; // 13
+  const activeMods = (p.modules||[]).filter(mid=>!NON_MODULES.includes(mid));
+  return Math.round((activeMods.length / TOTAL_MODULES) * 100);
 }
 function getGlobalProgress(){if(!state.properties.length)return 0;return Math.round(state.properties.reduce((s,p)=>s+getPropProgress(p),0)/state.properties.length);}
 function pctColor(pct){return pct>=80?'#00b460':pct>=50?'#e67e00':'#820ad1';}
