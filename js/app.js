@@ -160,7 +160,56 @@ function saveStateLocal(){ /* no-op: todo se guarda en Supabase */ }
 function loadStateLocal(){ return false; /* siempre cargar desde Supabase */ }
 const $=id=>document.getElementById(id);
 
-// ══════ HELPERS ══════
+// ══════════════════════════════════════════════
+//  ★ COUNTER ANIMATION
+//  Anima un número del valor `from` al `to` con easing cúbico.
+//  animateCounter(element, 0, 82, { suffix: '%', duration: 900 })
+// ══════════════════════════════════════════════
+function animateCounter(el, from, to, { suffix='', prefix='', duration=700, decimals=0 }={}) {
+  if (!el || isNaN(to)) return;
+  const start   = performance.now();
+  const range   = to - from;
+  const easeOut = t => 1 - Math.pow(1 - t, 3); // cubic ease-out
+  function tick(now) {
+    const elapsed  = Math.min(now - start, duration);
+    const progress = easeOut(elapsed / duration);
+    const value    = from + range * progress;
+    el.textContent = prefix + value.toFixed(decimals) + suffix;
+    if (elapsed < duration) requestAnimationFrame(tick);
+    else el.textContent = prefix + to.toFixed(decimals) + suffix;
+  }
+  requestAnimationFrame(tick);
+}
+
+// ══════════════════════════════════════════════
+//  ★ SKELETON LOADERS
+//  Genera HTML de placeholders con shimmer animation.
+//  CSS en css/skeletons.css
+// ══════════════════════════════════════════════
+function skeletonKpiCard() {
+  return `<div class="skeleton-kpi-card">
+    <div class="skeleton skeleton-kpi-label"></div>
+    <div class="skeleton skeleton-kpi-value"></div>
+    <div class="skeleton skeleton-kpi-sub"></div>
+  </div>`;
+}
+function skeletonKpiStrip(n=4) { return Array.from({length:n}, skeletonKpiCard).join(''); }
+function skeletonTableRow(cols=7) {
+  return `<tr>${Array.from({length:cols}, ()=>'<td><div class="skeleton skeleton-cell"></div></td>').join('')}</tr>`;
+}
+function skeletonTableBody(rows=5, cols=7) { return Array.from({length:rows}, ()=>skeletonTableRow(cols)).join(''); }
+function skeletonProgressCard() {
+  return `<div class="skeleton-progress-card">
+    <div class="skeleton skeleton-card-title"></div>
+    <div class="skeleton skeleton-card-sub"></div>
+    <div class="skeleton skeleton-card-bar"></div>
+    <div class="skeleton skeleton-card-mods"></div>
+  </div>`;
+}
+function skeletonChart() { return '<div class="skeleton skeleton-chart"></div>'; }
+
+// ══════ DEMO DATA ══════
+function useDemoData(){ showToast('Modo demo desactivado. Conecta a Supabase.','error'); }
 function getPropProgress(p){
   // Implementación = módulos activos de uso / 13 módulos totales de uso
   const TOTAL_MODULES = USE_MODULES.length; // 13
@@ -171,8 +220,7 @@ function getGlobalProgress(){if(!state.properties.length)return 0;return Math.ro
 function pctColor(pct){return pct>=80?'#00b460':pct>=50?'#e67e00':'#820ad1';}
 function pctBadgeClass(pct){return pct>=80?'c-green':pct>=50?'c-orange':'c-purple';}
 
-// ══════ DEMO DATA ══════
-function useDemoData(){ showToast('Modo demo desactivado. Conecta a Supabase.','error'); }
+// ══════ HELPERS ══════
 
 // ══════ SIDEBAR COLAPSABLE ══════
 function toggleSidebar(){
@@ -332,6 +380,13 @@ async function connectSupabase(){
 
 async function fetchAllData(){
   if(!sb)return;
+  // ★ Mostrar skeletons mientras carga
+  const kpiEls=['kpiTotal','kpiFase0','kpiImpl','kpiPilot','kpiSupport'];
+  kpiEls.forEach(id=>{const el=$(id);if(el)el.innerHTML='<div class="skeleton" style="height:22px;width:40px;border-radius:6px;display:inline-block"></div>';});
+  const propsBody=$('propsBody');
+  if(propsBody) propsBody.innerHTML=skeletonTableBody(4,8);
+  const phasesGrid=$('phasesGrid');
+  if(phasesGrid) phasesGrid.innerHTML=Array.from({length:4},()=>'<div class="skeleton" style="height:100px;border-radius:14px"></div>').join('');
   try{
     const{data:props,error}=await sb.from('properties').select('*').order('created_at',{ascending:false});
     if(error)throw error;
@@ -355,22 +410,38 @@ function renderKPIs(){
   const p=state.properties;
   const byPhase=ph=>p.filter(x=>x.phase===ph);
   const avg=ph=>{const a=byPhase(ph);return a.length?Math.round(a.reduce((s,x)=>s+(x.days||0),0)/a.length):0;};
-  $('kpiTotal').textContent=p.length;
-  $('kpiFase0').textContent=byPhase('fase0').length;$('kpiFase0Days').textContent=avg('fase0');
-  $('kpiImpl').textContent=byPhase('fase1').length;$('kpiImplDays').textContent=avg('fase1');
-  $('kpiPilot').textContent=byPhase('fase2').length;$('kpiPilotDays').textContent=avg('fase2');
-  $('kpiSupport').textContent=byPhase('fase3').length;$('kpiSupportDays').textContent=avg('fase3');
+
+  // ★ Counter animations en totales de fase
+  const totals=[
+    {id:'kpiTotal',    val:p.length},
+    {id:'kpiFase0',    val:byPhase('fase0').length},
+    {id:'kpiImpl',     val:byPhase('fase1').length},
+    {id:'kpiPilot',    val:byPhase('fase2').length},
+    {id:'kpiSupport',  val:byPhase('fase3').length},
+  ];
+  totals.forEach(({id,val})=>{
+    const el=$(id); if(!el) return;
+    const prev=parseInt(el.textContent)||0;
+    if(prev!==val) animateCounter(el,prev,val,{duration:600});
+    else el.textContent=val;
+  });
+  $('kpiFase0Days').textContent=avg('fase0');
+  $('kpiImplDays').textContent=avg('fase1');
+  $('kpiPilotDays').textContent=avg('fase2');
+  $('kpiSupportDays').textContent=avg('fase3');
 
   // ── Implementación Global ──
   const implAvg=p.length?Math.round(p.reduce((s,x)=>s+getPropProgress(x),0)/p.length):0;
   const implColor=implAvg>=80?'#00b460':implAvg>=50?'#e67e00':'#820ad1';
   const implOnTarget=p.filter(x=>getPropProgress(x)>=80).length;
   const implEl=$('implGlobalKpis');
-  if(implEl) implEl.innerHTML=`
-    <div style="text-align:right">
-      <div style="font-size:clamp(22px,2.2vw,32px);font-weight:800;color:${implColor};line-height:1">${implAvg}%</div>
+  if(implEl){
+    implEl.innerHTML=`<div style="text-align:right">
+      <div id="implGlobalPct" style="font-size:clamp(22px,2.2vw,32px);font-weight:800;color:${implColor};line-height:1">0%</div>
       <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted);margin-top:2px">${implOnTarget}/${p.length} en meta</div>
     </div>`;
+    setTimeout(()=>animateCounter($('implGlobalPct'),0,implAvg,{suffix:'%',duration:900}),50);
+  }
 
   // ── Usabilidad Global (usa metas reales por módulo) ──
   let totalActiveMods=0,totalWithUsage=0;
@@ -384,11 +455,13 @@ function renderKPIs(){
   const usabAvg=totalActiveMods>0?Math.round((totalWithUsage/totalActiveMods)*100):0;
   const usabColor=usabAvg>=80?'#00b460':usabAvg>=50?'#e67e00':'#820ad1';
   const usabEl=$('usabGlobalKpis');
-  if(usabEl) usabEl.innerHTML=`
-    <div style="text-align:right">
-      <div style="font-size:clamp(22px,2.2vw,32px);font-weight:800;color:${usabColor};line-height:1">${usabAvg}%</div>
+  if(usabEl){
+    usabEl.innerHTML=`<div style="text-align:right">
+      <div id="usabGlobalPct" style="font-size:clamp(22px,2.2vw,32px);font-weight:800;color:${usabColor};line-height:1">0%</div>
       <div style="font-size:clamp(9px,.85vw,11px);color:var(--text-muted);margin-top:2px">${totalWithUsage}/${totalActiveMods} en meta</div>
     </div>`;
+    setTimeout(()=>animateCounter($('usabGlobalPct'),0,usabAvg,{suffix:'%',duration:900}),50);
+  }
 }
 
 
@@ -635,8 +708,14 @@ function renderGlobalProgress(){
 
   // ── KPI headers ──
   const implOnTarget=props.filter(p=>getPropProgress(p)>=80).length;
-  if($('pgImplKpi')) $('pgImplKpi').innerHTML=`<div style="font-size:clamp(24px,2.4vw,34px);font-weight:800;color:${implColor};line-height:1">${g}%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${implOnTarget}/${props.length} en meta</div>`;
-  if($('pgUsabKpi')) $('pgUsabKpi').innerHTML=`<div style="font-size:clamp(24px,2.4vw,34px);font-weight:800;color:${usabColor};line-height:1">${usabGlobal}%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${totalWithUsage}/${totalActiveMods} en meta</div>`;
+  if($('pgImplKpi')){
+    $('pgImplKpi').innerHTML=`<div id="pgImplPct" style="font-size:clamp(24px,2.4vw,34px);font-weight:800;color:${implColor};line-height:1">0%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${implOnTarget}/${props.length} en meta</div>`;
+    setTimeout(()=>animateCounter($('pgImplPct'),0,g,{suffix:'%',duration:800}),50);
+  }
+  if($('pgUsabKpi')){
+    $('pgUsabKpi').innerHTML=`<div id="pgUsabPct" style="font-size:clamp(24px,2.4vw,34px);font-weight:800;color:${usabColor};line-height:1">0%</div><div style="font-size:10px;color:var(--text-muted);margin-top:2px">${totalWithUsage}/${totalActiveMods} en meta</div>`;
+    setTimeout(()=>animateCounter($('pgUsabPct'),0,usabGlobal,{suffix:'%',duration:800}),50);
+  }
   if($('pgImplSub')) $('pgImplSub').textContent=`${implOnTarget}/${props.length} propiedades en meta (≥80%) · promedio por fase`;
   if($('pgUsabSub')) $('pgUsabSub').textContent=`${totalWithUsage} de ${totalActiveMods} módulos activos han alcanzado su meta de usabilidad`;
 
@@ -729,7 +808,10 @@ function renderPropertyProgressCards(){
   if(progressFilter!=='all')props=props.filter(p=>p.phase===progressFilter);
   props.sort((a,b)=>{if(sortVal==='pct_desc')return getPropProgress(b)-getPropProgress(a);if(sortVal==='pct_asc')return getPropProgress(a)-getPropProgress(b);if(sortVal==='name')return a.name.localeCompare(b.name);if(sortVal==='phase'){const o={fase0:0,fase1:1,fase2:2,fase3:3};return(o[a.phase]||0)-(o[b.phase]||0);}return 0;});
   if(!props.length){$('propProgressGrid').innerHTML=`<div style="grid-column:1/-1;padding:40px;text-align:center;color:var(--text-muted);font-size:13px">📭 Sin propiedades en esta fase.</div>`;return;}
-  $('propProgressGrid').innerHTML=props.map(p=>{
+  // ★ Skeleton mientras renderiza
+  $('propProgressGrid').innerHTML=Array.from({length:Math.min(props.length,4)},()=>skeletonProgressCard()).join('');
+  setTimeout(()=>{
+    $('propProgressGrid').innerHTML=props.map(p=>{
     const cfg=PHASES[p.phase]||PHASES.fase1;
     const mv=p.module_values||{};const units=p.units||50;
     const overall=getPropProgress(p);const clr=pctColor(overall);
@@ -759,6 +841,7 @@ function renderPropertyProgressCards(){
     </div>`;
     return `<div class="pp-card"><div class="pp-header"><div><div class="pp-name">${p.name}</div><div class="pp-city">📍 ${p.city||'—'} · ${units} unid.</div>${p.entry_date?`<div style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted);margin-top:2px">📅 ${p.entry_date}</div>`:''}</div><div style="text-align:right"><span class="pill ${cfg.pill}">${cfg.label}</span></div></div><div class="pp-body">${metricsRow}${activeMods.length?`<div style="font-size:clamp(8px,.8vw,10px);font-weight:700;color:var(--text-muted);text-transform:uppercase;letter-spacing:.6px;margin-bottom:6px">Módulos activos (${activeMods.length}/${USE_MODULES.length})</div><div class="pp-mod-list">${modRows}</div>`:`<div style="font-size:clamp(10px,.9vw,12px);color:var(--text-muted);padding:10px 0;text-align:center">Sin módulos activos</div>`}${inactiveMods.length?`<div style="font-size:clamp(8px,.8vw,10px);color:var(--text-muted);margin-top:8px">Pendientes: ${inactiveMods.map(m=>m.icon+' '+m.label).join(', ')}</div>`:''}</div><div class="pp-footer"><div class="pp-days">⏱ Sem. ${getPropWeek(p)}/8 · ${getDaysFromEntry(p)} días</div><button class="pp-edit-btn" onclick="openEditModal('${p.id}')">✏️ Editar</button></div></div>`;
   }).join('');
+  },30);
 }
 
 
