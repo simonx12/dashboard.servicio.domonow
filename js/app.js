@@ -1844,6 +1844,9 @@ document.addEventListener('DOMContentLoaded',async()=>{
     if(session?.user){
       console.log('[DomoNow] ✅ Sesión activa:',session.user.email);
       await onUserLoggedIn(session.user);
+      // ── Shortcut PWA: navegar a sección si viene en ?section= ──
+      const urlSection=new URLSearchParams(location.search).get('section');
+      if(urlSection)showSection(urlSection,document.querySelector(`.nav-item[data-sec="${urlSection}"]`));
     }else{
       console.log('[DomoNow] Sin sesión. Mostrando login.');
       goLogin();
@@ -1853,6 +1856,41 @@ document.addEventListener('DOMContentLoaded',async()=>{
     goLogin();
     showLoginError(e.message||'Error al inicializar. Recarga la página.');
   }
+});
+
+// ── PWA Install Prompt ──
+let _deferredInstall=null;
+window.addEventListener('beforeinstallprompt',e=>{
+  e.preventDefault();
+  _deferredInstall=e;
+  // Mostrar banner de instalación sutil
+  const banner=document.createElement('div');
+  banner.id='pwaInstallBanner';
+  banner.style.cssText='position:fixed;bottom:20px;right:20px;background:linear-gradient(135deg,#5a0899,#820ad1);color:#fff;border-radius:14px;padding:14px 18px;display:flex;align-items:center;gap:12px;z-index:9999;box-shadow:0 8px 32px rgba(130,10,209,.4);font-family:Montserrat,sans-serif;font-size:13px;animation:fadeInUp .4s ease;max-width:300px';
+  banner.innerHTML=`
+    <span style="font-size:22px">📲</span>
+    <div style="flex:1">
+      <div style="font-weight:700;margin-bottom:2px">Instalar DomoNow</div>
+      <div style="font-size:11px;opacity:.8">Accede más rápido desde tu pantalla de inicio</div>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:6px">
+      <button onclick="installPWA()" style="background:rgba(255,255,255,.2);border:1px solid rgba(255,255,255,.4);color:#fff;border-radius:8px;padding:5px 12px;cursor:pointer;font-size:11px;font-weight:700;font-family:Montserrat,sans-serif">Instalar</button>
+      <button onclick="document.getElementById('pwaInstallBanner').remove()" style="background:transparent;border:none;color:rgba(255,255,255,.6);cursor:pointer;font-size:10px;font-family:Montserrat,sans-serif">Ahora no</button>
+    </div>`;
+  document.body.appendChild(banner);
+  setTimeout(()=>{if(banner.parentNode)banner.remove();},15000);
+});
+
+function installPWA(){
+  const banner=document.getElementById('pwaInstallBanner');
+  if(banner)banner.remove();
+  if(_deferredInstall){_deferredInstall.prompt();_deferredInstall.userChoice.then(r=>{console.log('[PWA] Install:',r.outcome);_deferredInstall=null;});}
+}
+
+window.addEventListener('appinstalled',()=>{
+  console.log('[DomoNow] PWA instalada ✓');
+  showToast('✓ DomoNow instalado correctamente','success');
+  _deferredInstall=null;
 });
 
 
