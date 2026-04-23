@@ -289,3 +289,61 @@
   background: rgba(224,48,48,0.2);
   border-color: rgba(224,48,48,0.4);
 }
+
+/* ══════════════════════════════════════════════
+   RESPONSIVE — Mobile & Tablet
+   ══════════════════════════════════════════════ */
+
+/* Tablet (≤768px) */
+@media (max-width: 768px) {
+  .login-card {
+    width: min(420px, 92vw);
+    padding: clamp(24px, 6vw, 36px);
+    border-radius: 20px;
+  }
+  .login-orb-1 { width: 300px; height: 300px; top: -80px; left: -60px; }
+  .login-orb-2 { width: 250px; height: 250px; bottom: -60px; right: -50px; }
+  .login-orb-3 { width: 200px; height: 200px; }
+  .login-logo { margin-bottom: 24px; }
+  .login-logo-icon { width: 42px; height: 42px; font-size: 20px; }
+  .login-logo-text { font-size: 22px; }
+  .login-title { font-size: clamp(18px, 5vw, 24px); }
+  .login-subtitle { font-size: 13px; margin-bottom: 24px; }
+  .login-input { font-size: 16px; padding: 12px 14px; }
+  .login-btn { font-size: 14px; padding: 13px; }
+  .login-footer { margin-top: 20px; padding-top: 16px; }
+}
+
+/* Mobile pequeño (≤480px) */
+@media (max-width: 480px) {
+  #sec-login { align-items: flex-start; padding-top: clamp(24px, 8vh, 60px); }
+
+  .login-card {
+    width: 100%;
+    min-height: 100dvh;
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+    border-top: none;
+    padding: clamp(28px, 8vw, 40px) clamp(20px, 6vw, 28px);
+    box-shadow: none;
+  }
+  .login-orb-1 { width: 220px; height: 220px; top: -60px; left: -50px; filter: blur(60px); }
+  .login-orb-2 { width: 180px; height: 180px; bottom: -40px; right: -40px; filter: blur(60px); }
+  .login-orb-3 { width: 150px; height: 150px; filter: blur(60px); }
+  .login-logo { margin-bottom: 28px; gap: 10px; }
+  .login-logo-icon { width: 40px; height: 40px; font-size: 20px; border-radius: 12px; }
+  .login-logo-text { font-size: 20px; }
+  .login-title { font-size: clamp(22px, 7vw, 28px); white-space: normal; }
+  .login-subtitle { font-size: 13px; margin-bottom: 28px; }
+  .login-field { margin-bottom: 14px; }
+  .login-input { font-size: 16px; padding: 13px 14px; border-radius: 10px; }
+  .login-btn { margin-top: 12px; padding: 15px; font-size: 15px; border-radius: 10px; }
+  .login-footer {
+    margin-top: 24px;
+    padding-top: 18px;
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+}
