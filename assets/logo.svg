@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 110" fill="none">
+  <!-- Casa -->
+  <g transform="translate(105,6)">
+    <!-- Tejado -->
+    <polyline points="25,28 0,52 50,52" stroke="rgba(255,255,255,0.85)" stroke-width="4" stroke-linejoin="round" fill="none"/>
+    <!-- Cuerpo de la casa (transparente) -->
+    <rect x="8" y="52" width="34" height="24" rx="2" stroke="rgba(255,255,255,0.85)" stroke-width="4" fill="none"/>
+    <!-- Punto naranja (chimenea/ventana) -->
+    <rect x="20" y="44" width="10" height="10" rx="2" fill="#F7B500"/>
+  </g>
+  <!-- Texto Domo -->
+  <text x="18" y="90" font-family="Montserrat, sans-serif" font-weight="800" font-size="38" fill="rgba(255,255,255,0.92)" letter-spacing="-1">Domo</text>
+  <!-- Texto Now -->
+  <text x="144" y="90" font-family="Montserrat, sans-serif" font-weight="300" font-size="38" fill="rgba(255,255,255,0.7)" letter-spacing="-1">Now</text>
+</svg>

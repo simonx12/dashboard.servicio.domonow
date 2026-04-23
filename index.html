@@ -27,11 +27,24 @@
 
 <aside class="sidebar" id="sidebar">
   <div class="sidebar-logo">
-    <div class="logo-wrap">
-      <div class="logo-icon">🏘️</div>
-      <span class="logo-text sidebar-toggle-hide">Domo<span>Now</span></span>
+    <!-- Logo completo (visible expandido) -->
+    <img src="assets/logo.svg" alt="DomoNow" class="sidebar-logo-img sidebar-toggle-hide">
+    <!-- Ícono solo (visible colapsado) -->
+    <div class="sidebar-logo-icon-only">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 52 52" fill="none" width="32" height="32">
+        <polyline points="26,4 2,26 50,26" stroke="rgba(255,255,255,0.85)" stroke-width="4.5" stroke-linejoin="round" fill="none"/>
+        <rect x="10" y="26" width="32" height="22" rx="2" stroke="rgba(255,255,255,0.85)" stroke-width="4.5" fill="none"/>
+        <rect x="20" y="18" width="12" height="10" rx="2" fill="#F7B500"/>
+      </svg>
     </div>
-    <div class="sidebar-toggle" onclick="toggleSidebar()" title="Colapsar sidebar">◀</div>
+    <!-- Botón toggle hamburguesa -->
+    <div class="sidebar-toggle" onclick="toggleSidebar()" title="Colapsar / expandir">
+      <svg class="icon-hamburger" width="16" height="16" viewBox="0 0 16 16" fill="none">
+        <rect y="2" width="16" height="2.2" rx="1.1" fill="currentColor"/>
+        <rect y="6.9" width="16" height="2.2" rx="1.1" fill="currentColor"/>
+        <rect y="11.8" width="16" height="2.2" rx="1.1" fill="currentColor"/>
+      </svg>
+    </div>
   </div>
   <div class="sidebar-greeting sidebar-toggle-hide" id="greetingLabel">Buenos días</div>
   <div class="greeting-name sidebar-toggle-hide" id="greetingText">Admin</div>
