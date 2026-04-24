@@ -1896,13 +1896,16 @@ function renderDashCharts(){
   const implColor=implAvg>=80?'#00b460':implAvg>=50?'#e67e00':'#e03030';
 
   // ── Cálculos de Usabilidad (excluye NON_MODULES) ──
+  let totalUsabMods = 0, totalUsabUsage = 0;
   const usabPerProp=props.map(p=>{
     const mv=p.module_values||{};
     const usabMods=(p.modules||[]).filter(mid=>!NON_MODULES.includes(mid));
     const withUsage=usabMods.filter(mid=>(mv[mid]||0)>0).length;
+    totalUsabMods += usabMods.length;
+    totalUsabUsage += withUsage;
     return usabMods.length>0?Math.round((withUsage/usabMods.length)*100):0;
   });
-  const usabAvg=usabPerProp.length?Math.round(usabPerProp.reduce((s,v)=>s+v,0)/usabPerProp.length):0;
+  const usabAvg = totalUsabMods > 0 ? Math.round((totalUsabUsage / totalUsabMods) * 100) : 0;
   const usabOnTarget=usabPerProp.filter(v=>v>=80).length;
   const usabAlert=usabPerProp.filter(v=>v>=50&&v<80).length;
   const usabCritical=usabPerProp.filter(v=>v<50).length;
