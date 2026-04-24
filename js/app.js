@@ -65,9 +65,9 @@ function calcUsabMeta(mid, units){
   const fn = USAB_META[mid] || USAB_META._default;
   return Math.max(1, fn(units));
 }
-// Devuelve true si el módulo supera su meta de usabilidad
+// Devuelve true si el módulo tiene data registrada (valor > 0)
 function moduleInUse(mid, value, units){
-  return (value || 0) >= calcUsabMeta(mid, units);
+  return (value || 0) > 0;
 }
 // % de cumplimiento de usabilidad de un módulo (0-100)
 function calcUsabPct(mid, value, units){
