@@ -155,6 +155,46 @@ async function loadTasksFromSupabase() {
   });
 }
 
+window.downloadTasksReport = function() {
+  if (!state || !state.properties || !propTasks) {
+    if(typeof showToast === 'function') showToast('No hay datos para exportar', 'error');
+    return;
+  }
+  
+  let csvContent = "Propiedad,Ciudad,Fase,Categoria,Tarea,Peso,Progreso (%)\n";
+  let hasTasks = false;
+  
+  state.properties.forEach(p => {
+    const tasks = propTasks[p.id] || [];
+    tasks.forEach(t => {
+      hasTasks = true;
+      const propName = `"${(p.name||'').replace(/"/g, '""')}"`;
+      const propCity = `"${(p.city||'').replace(/"/g, '""')}"`;
+      const phase = p.phase || '';
+      const cat = `"${t.category||''}"`;
+      const text = `"${(t.text||'').replace(/"/g, '""')}"`;
+      const weight = t.weight || 0;
+      const progress = t.progress || 0;
+      csvContent += `${propName},${propCity},${phase},${cat},${text},${weight},${progress}\n`;
+    });
+  });
+  
+  if (!hasTasks) {
+    if(typeof showToast === 'function') showToast('No hay tareas registradas para exportar', 'error');
+    return;
+  }
+  
+  const blob = new Blob(["\ufeff", csvContent], { type: 'text/csv;charset=utf-8;' });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.setAttribute("href", url);
+  const dateStr = new Date().toISOString().split('T')[0];
+  link.setAttribute("download", `reporte_tareas_abismo_${dateStr}.csv`);
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+
 // Persistencia local eliminada — fuente única: Supabase
 function saveStateLocal(){ /* no-op: todo se guarda en Supabase */ }
 function loadStateLocal(){ return false; /* siempre cargar desde Supabase */ }

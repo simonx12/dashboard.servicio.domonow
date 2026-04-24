@@ -698,9 +698,12 @@
       <div class="tasks-title">Tareas por Propiedad</div>
       <div class="tasks-sub">Asigna tareas a cada propiedad. Su progreso combinado con los módulos activos sella el abismo de adopción.</div>
     </div>
-    <div class="tasks-global-pct">
-      <div class="tgp-label">Cierre global</div>
-      <div class="tgp-val" id="tasksGlobalPct">—</div>
+    <div style="display:flex; gap: 16px; align-items: center;">
+      <button class="btn-outline btn-sm" style="background:var(--surface);border-color:var(--border)" onclick="downloadTasksReport()">⬇️ Descargar Reporte</button>
+      <div class="tasks-global-pct">
+        <div class="tgp-label">Cierre global</div>
+        <div class="tgp-val" id="tasksGlobalPct">—</div>
+      </div>
     </div>
   </div>
 

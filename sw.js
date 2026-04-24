@@ -2,7 +2,8 @@
    DomoNow Service Worker — PWA + Web
    Compatible con cualquier base path (/, /app/, etc.)
    ══════════════════════════════════════════ */
-const CACHE_NAME = 'domonow-v3-2';
+
+const CACHE_NAME = 'domonow-v3-3';
 
 // Base path dinámico (funciona en / y en /subdir/)
 const BASE = self.registration.scope;
