@@ -24,7 +24,7 @@ export function calcUsabMeta(mid, units) {
 }
 
 export function moduleInUse(mid, value, units) {
-  return (value || 0) >= calcUsabMeta(mid, units);
+  return (value || 0) > 0;
 }
 
 export function calcUsabPct(mid, value, units) {
