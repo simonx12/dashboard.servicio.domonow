@@ -73,6 +73,7 @@ El proyecto fue refactorizado desde un monolito único `index.html` de **5,164 l
 | `active_modules` | text[] | Array de IDs de módulos activos |
 | `module_values` | jsonb | `{moduleId: valorReal}` por módulo |
 | `notes` | text | Observaciones libres |
+| `active_users` | int | Usuarios activos registrados |
 | `entry_date` | date | Fecha de ingreso a la plataforma |
 | `created_at` | timestamp | Automático |
 

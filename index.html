@@ -1153,10 +1153,16 @@
       </div>
       <div class="form-row">
         <div class="form-group">
-          <div id="fDaysHint" style="font-size:11px;color:var(--domo);font-weight:600;margin:-4px 0 10px"></div><label class="form-label">Total Unidades (apartamentos)</label>
+          <div id="fDaysHint" style="font-size:11px;color:var(--domo);font-weight:600;margin:-4px 0 10px"></div>
+          <label class="form-label">Total Unidades (apartamentos)</label>
           <input class="form-input" id="fUnits" type="number" min="1" value="50" oninput="rebuildModuleChecks()"/>
-          <div class="form-hint">Las metas se calculan sobre el 50% de este número</div>
         </div>
+        <div class="form-group">
+          <label class="form-label">Usuarios Activos (registrados)</label>
+          <input class="form-input" id="fActiveUsers" type="number" min="0" value="0"/>
+        </div>
+      </div>
+      <div class="form-hint" style="margin-top:-10px;margin-bottom:15px">Las metas se calculan sobre el 50% de las unidades.</div>
         <div class="form-group">
           <label class="form-label">📅 Fecha de Ingreso <span style="font-size:10px;color:var(--text-muted);font-weight:400">(modifica si hay retraso o adelanto)</span></label>
           <input class="form-input" id="fEntryDate" type="date" onchange="autoCalcDays()"/>
