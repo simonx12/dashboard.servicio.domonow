@@ -511,7 +511,7 @@ function disconnectSupabase(){logoutUser();}
 function renderKPIs(){
   const p=state.properties;
   const byPhase=ph=>p.filter(x=>x.phase===ph);
-  const avg=ph=>{const a=byPhase(ph);return a.length?Math.round(a.reduce((s,x)=>s+(x.days||0),0)/a.length):0;};
+  const avg=ph=>{const a=byPhase(ph);return a.length?Math.round(a.reduce((s,x)=>s+Number(x.days||0),0)/a.length):0;};
 
   // ★ Counter animations en totales de fase
   const totals=[
@@ -2730,9 +2730,9 @@ let linealTab           = 'overview';
  */
 
 function getDaysFromEntry(p) {
-  if(!p.entry_date) return p.days || 0;
+  if(!p.entry_date) return Number(p.days) || 0;
   const start = new Date(p.entry_date);
-  if(isNaN(start.getTime())) return p.days || 0;
+  if(isNaN(start.getTime())) return Number(p.days) || 0;
   const s = new Date(start.getFullYear(), start.getMonth(), start.getDate());
   const t = new Date(); const today = new Date(t.getFullYear(), t.getMonth(), t.getDate());
   return Math.max(0, Math.floor((today - s) / 86400000));
